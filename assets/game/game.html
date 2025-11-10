@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>토돌이 한글 받기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .game-container {
+            width: 380px;
+            height: 600px;
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .game-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .score {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .hearts {
+            display: flex;
+            gap: 5px;
+            padding-right: 45px;
+        }
+
+        .heart {
+            font-size: 24px;
+        }
+
+        .turn-indicator {
+            background: #fff;
+            color: #667eea;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .countdown-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 90;
+            animation: fadeIn 0.3s;
+        }
+
+        .countdown-text {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .countdown-number {
+            color: #ffd700;
+            font-size: 80px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 460px;
+            position: relative;
+            background-image: url('./repeat_bg.png');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+        }
+
+        .character {
+            position: absolute;
+            bottom: 20px;
+            width: 60px;
+            height: 60px;
+            transition: left 0.1s linear;
+        }
+
+        .falling-item {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: top 0.05s linear;
+        }
+
+        .consonant {
+            color: #667eea;
+            border: 3px solid #667eea;
+        }
+
+        .vowel {
+            color: #f093fb;
+            border: 3px solid #f093fb;
+        }
+
+        .game-over-screen,
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+
+        .game-over-screen h2,
+        .start-screen h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .final-score {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .instructions {
+            color: #ddd;
+            text-align: center;
+            margin: 20px;
+            line-height: 1.6;
+        }
+
+        .character-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .sound-toggle {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 101;
+        }
+
+        .sound-toggle:hover {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+        }
+
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            z-index: 105;
+            /* 게임 화면 위 */
+        }
+
+        .mobile-controls button {
+            font-size: 30px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border: none;
+            cursor: pointer;
+            user-select: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- BGM 오디오 (autoplay는 사용자 인터랙션 후 시작) -->
+    <audio id="bgm" loop>
+        <source src="bgm.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="game-container">
+        <!-- 사운드 토글 버튼 -->
+        <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
+
+        <!-- 시작 화면 -->
+        <div class="start-screen" id="startScreen">
+            <h2>🎮 토돌이 한글 받기</h2>
+            <div class="instructions">
+                <p>⬅️ ➡️ 방향키로 토돌이를 움직여요!</p>
+                <p><strong style="color: #667eea;">자음 턴</strong>에는 자음만,</p>
+                <p><strong style="color: #f093fb;">모음 턴</strong>에는 모음만 받아요!</p>
+                <p>❤️ 하트가 0이 되면 게임 오버!</p>
+            </div>
+            <button class="btn" onclick="startGame()">게임 시작</button>
+        </div>
+
+        <!-- 게임 헤더 -->
+        <div class="game-header">
+            <div class="score">점수: <span id="score">0</span></div>
+            <div class="hearts" id="hearts">
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+            </div>
+        </div>
+
+        <!-- 턴 표시 -->
+        <div class="turn-indicator" id="turnIndicator">
+            자음 턴
+        </div>
+
+        <!-- 게임 캔버스 -->
+        <div class="game-canvas" id="gameCanvas">
+            <div class="character" id="character">
+                <!-- Standing 이미지 (기본) -->
+                <img id="standingTodoli" class="character-img" src="standing_todoli.png" alt="Standing Todoli"
+                     style="display: block;">
+
+                <!-- Running Left 이미지 (왼쪽으로 움직일 때) -->
+                <img id="runLeftTodoli" class="character-img" src="run_todoli_left.png" alt="Running Left Todoli"
+                     style="display: none;">
+
+                <!-- Running Right 이미지 (오른쪽으로 움직일 때) -->
+                <img id="runRightTodoli" class="character-img" src="run_todoli_right.png" alt="Running Right Todoli"
+                     style="display: none;">
+            </div>
+        </div>
+
+        <!-- 게임 오버 화면 -->
+        <div class="game-over-screen" id="gameOverScreen" style="display: none;">
+            <h2>게임 오버!</h2>
+            <div class="final-score">최종 점수: <span id="finalScore">0</span></div>
+            <button class="btn" onclick="restartGame()">다시 시작</button>
+        </div>
+
+        <!-- 모바일 터치 컨트롤 -->
+        <div class="mobile-controls">
+            <button onmousedown="moveLeft()" onmouseup="stopMove()" ontouchstart="moveLeft()"
+                ontouchend="stopMove()">⬅️</button>
+            <button onmousedown="moveRight()" onmouseup="stopMove()" ontouchstart="moveRight()"
+                ontouchend="stopMove()">➡️</button>
+        </div>
+
+    </div>
+
+    <script>
+        // BGM 요소
+        const bgm = document.getElementById('bgm');
+        const soundToggle = document.getElementById('soundToggle');
+        let isSoundOn = true;
+
+        // 사운드 토글
+        function toggleSound() {
+            isSoundOn = !isSoundOn;
+            if (isSoundOn) {
+                bgm.play();
+                soundToggle.textContent = '🔊';
+            } else {
+                bgm.pause();
+                soundToggle.textContent = '🔇';
+            }
+        }
+
+        // 게임 상태
+        let gameState = {
+            score: 0,
+            hearts: 3,
+            isRunning: false,
+            currentTurn: 'consonant', // 'consonant' or 'vowel'
+            characterPosition: 160,
+            fallingItems: [],
+            turnCount: 0,
+            itemsCaught: 0,
+            isCountingDown: false
+        };
+
+        // 한글 자음과 모음
+        const consonants = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+        const vowels = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
+
+        // DOM 요소
+        const character = document.getElementById('character');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const scoreElement = document.getElementById('score');
+        const heartsElement = document.getElementById('hearts');
+        const turnIndicator = document.getElementById('turnIndicator');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const startScreen = document.getElementById('startScreen');
+        const standingTodoli = document.getElementById('standingTodoli');
+        const runLeftTodoli = document.getElementById('runLeftTodoli');
+        const runRightTodoli = document.getElementById('runRightTodoli');
+
+        // 캐릭터 이동 상태
+        let isMoving = false;
+        let movingTimeout = null;
+        let currentDirection = 'none'; // 'left', 'right', 'none'
+
+        // 키보드 입력
+        let keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // 터치 이동
+        let touchDirection = 'none';
+        let touchInterval = null;
+
+        function moveLeft() {
+            touchDirection = 'left';
+            if (!touchInterval) {
+                touchInterval = setInterval(() => {
+                    if (gameState.characterPosition > 0) {
+                        gameState.characterPosition -= 5;
+                    }
+                }, 16); // 약 60fps
+            }
+        }
+
+        function moveRight() {
+            touchDirection = 'right';
+            if (!touchInterval) {
+                touchInterval = setInterval(() => {
+                    if (gameState.characterPosition < 320) {
+                        gameState.characterPosition += 5;
+                    }
+                }, 16);
+            }
+        }
+
+        function stopMove() {
+            touchDirection = 'none';
+            clearInterval(touchInterval);
+            touchInterval = null;
+        }
+
+
+        // 게임 시작
+        function startGame() {
+            startScreen.style.display = 'none';
+
+            // BGM 시작 (사용자 인터랙션 후)
+            if (isSoundOn) {
+                bgm.play().catch(err => console.log('BGM 자동재생 실패:', err));
+            }
+
+            gameState = {
+                score: 0,
+                hearts: 3,
+                isRunning: true,
+                currentTurn: 'consonant',
+                characterPosition: 160,
+                fallingItems: [],
+                turnCount: 0,
+                itemsCaught: 0,
+                isCountingDown: false
+            };
+            updateUI();
+            gameLoop();
+            spawnItems();
+        }
+
+        // 게임 재시작
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            // 떨어지는 아이템 제거
+            document.querySelectorAll('.falling-item').forEach(item => item.remove());
+            startGame();
+        }
+
+        // 떨어지는 아이템 생성
+        function spawnItems() {
+            if (!gameState.isRunning || gameState.isCountingDown) return;
+
+            const item = document.createElement('div');
+            item.className = 'falling-item';
+
+            // 랜덤하게 자음 또는 모음 선택 (70% 현재 턴, 30% 반대 턴)
+            const isCurrentTurn = Math.random() < 0.7;
+            const isConsonant = isCurrentTurn ?
+                (gameState.currentTurn === 'consonant') :
+                (gameState.currentTurn === 'vowel');
+
+            const letters = isConsonant ? consonants : vowels;
+            const letter = letters[Math.floor(Math.random() * letters.length)];
+
+            item.textContent = letter;
+            item.className = `falling-item ${isConsonant ? 'consonant' : 'vowel'}`;
+            item.dataset.type = isConsonant ? 'consonant' : 'vowel';
+            item.style.left = Math.random() * 330 + 'px';
+            item.style.top = '-50px';
+
+            gameCanvas.appendChild(item);
+            gameState.fallingItems.push({
+                element: item,
+                y: -50,
+                x: parseFloat(item.style.left)
+            });
+
+            // 다음 아이템 생성
+            setTimeout(spawnItems, 1500 - Math.min(gameState.score * 10, 800));
+        }
+
+        // 턴 변경 카운트다운
+        function startTurnCountdown() {
+            gameState.isCountingDown = true;
+
+            const nextTurn = gameState.currentTurn === 'consonant' ? '모음' : '자음';
+
+            // 카운트다운 오버레이 생성
+            const overlay = document.createElement('div');
+            overlay.className = 'countdown-overlay';
+            overlay.innerHTML = `
+                <div class="countdown-text">다음 턴: ${nextTurn} 턴</div>
+                <div class="countdown-number" id="countdownNumber">3</div>
+            `;
+            gameCanvas.appendChild(overlay);
+
+            let count = 3;
+            const countdownInterval = setInterval(() => {
+                count--;
+                const numberElement = document.getElementById('countdownNumber');
+                if (numberElement) {
+                    if (count > 0) {
+                        numberElement.textContent = count;
+                    } else {
+                        numberElement.textContent = '시작!';
+                        numberElement.style.color = '#00ff00';
+                    }
+                }
+
+                if (count < 0) {
+                    clearInterval(countdownInterval);
+                    overlay.remove();
+
+                    // 실제 턴 변경
+                    gameState.currentTurn = gameState.currentTurn === 'consonant' ? 'vowel' : 'consonant';
+                    updateTurnIndicator();
+                    gameState.isCountingDown = false;
+
+                    // 아이템 생성 재개
+                    spawnItems();
+                }
+            }, 1000);
+        }
+
+        // 게임 루프
+        function gameLoop() {
+            if (!gameState.isRunning) return;
+
+            // 키보드 + 터치 이동
+            let moved = false;
+            let direction = 'none';
+
+            if (keys['ArrowLeft'] || touchDirection === 'left') {
+                if (gameState.characterPosition > 0) {
+                    gameState.characterPosition -= 5;
+                }
+                moved = true;
+                direction = 'left';
+            }
+
+            if (keys['ArrowRight'] || touchDirection === 'right') {
+                if (gameState.characterPosition < 320) {
+                    gameState.characterPosition += 5;
+                }
+                moved = true;
+                direction = 'right';
+            }
+
+            // 이미지 전환
+            if (moved) {
+                if (!isMoving || currentDirection !== direction) {
+                    isMoving = true;
+                    currentDirection = direction;
+
+                    // 모든 이미지 숨기기
+                    standingTodoli.style.display = 'none';
+                    runLeftTodoli.style.display = 'none';
+                    runRightTodoli.style.display = 'none';
+
+                    // 방향에 맞는 이미지 표시
+                    if (direction === 'left') {
+                        runLeftTodoli.style.display = 'block';
+                    } else if (direction === 'right') {
+                        runRightTodoli.style.display = 'block';
+                    }
+                }
+
+                // 멈춘 후 0.2초 뒤 standing으로 전환
+                clearTimeout(movingTimeout);
+                movingTimeout = setTimeout(() => {
+                    isMoving = false;
+                    currentDirection = 'none';
+                    standingTodoli.style.display = 'block';
+                    runLeftTodoli.style.display = 'none';
+                    runRightTodoli.style.display = 'none';
+                }, 200);
+            }
+
+            character.style.left = gameState.characterPosition + 'px';
+
+            // 아이템 떨어뜨리기
+            gameState.fallingItems.forEach((item, index) => {
+                item.y += 3;
+                item.element.style.top = item.y + 'px';
+
+                // 충돌 체크
+                const charRect = {
+                    left: gameState.characterPosition,
+                    right: gameState.characterPosition + 60,
+                    top: 400,
+                    bottom: 460
+                };
+
+                const itemRect = {
+                    left: item.x,
+                    right: item.x + 50,
+                    top: item.y,
+                    bottom: item.y + 50
+                };
+
+                if (charRect.left < itemRect.right &&
+                    charRect.right > itemRect.left &&
+                    charRect.top < itemRect.bottom &&
+                    charRect.bottom > itemRect.top) {
+
+                    // 충돌 발생
+                    const itemType = item.element.dataset.type;
+                    if (itemType === gameState.currentTurn) {
+                        // 올바른 아이템
+                        gameState.score += 10;
+                        gameState.itemsCaught++;
+                        item.element.style.background = 'rgba(0, 255, 0, 0.5)';
+
+                        // 턴 변경 (5개마다, 카운트다운 실행)
+                        if (gameState.itemsCaught >= 5) {
+                            gameState.itemsCaught = 0;
+                            startTurnCountdown();
+                        }
+                    } else {
+                        // 잘못된 아이템
+                        gameState.hearts--;
+                        item.element.style.background = 'rgba(255, 0, 0, 0.5)';
+                        updateHearts();
+
+                        if (gameState.hearts <= 0) {
+                            gameOver();
+                        }
+                    }
+
+                    setTimeout(() => {
+                        item.element.remove();
+                    }, 100);
+                    gameState.fallingItems.splice(index, 1);
+                    updateUI();
+                }
+
+                // 화면 밖으로 나간 아이템 제거
+                if (item.y > 460) {
+                    item.element.remove();
+                    gameState.fallingItems.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 키보드 이동
+        let moved = false;
+        let direction = 'none';
+
+        if (keys['ArrowLeft'] || touchDirection === 'left') {
+            if (gameState.characterPosition > 0) {
+                gameState.characterPosition -= 5;
+            }
+            moved = true;
+            direction = 'left';
+        }
+
+        if (keys['ArrowRight'] || touchDirection === 'right') {
+            if (gameState.characterPosition < 320) {
+                gameState.characterPosition += 5;
+            }
+            moved = true;
+            direction = 'right';
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            scoreElement.textContent = gameState.score;
+        }
+
+        function updateHearts() {
+            heartsElement.innerHTML = '';
+            for (let i = 0; i < gameState.hearts; i++) {
+                heartsElement.innerHTML += '<span class="heart">❤️</span>';
+            }
+            for (let i = gameState.hearts; i < 3; i++) {
+                heartsElement.innerHTML += '<span class="heart" style="opacity: 0.3;">🖤</span>';
+            }
+        }
+
+        function updateTurnIndicator() {
+            turnIndicator.textContent = gameState.currentTurn === 'consonant' ? '자음 턴' : '모음 턴';
+            turnIndicator.style.color = gameState.currentTurn === 'consonant' ? '#667eea' : '#f093fb';
+        }
+
+        // 게임 오버
+        function gameOver() {
+            gameState.isRunning = false;
+            document.getElementById('finalScore').textContent = gameState.score;
+            gameOverScreen.style.display = 'flex';
+
+            // 게임 결과 저장 (Spring API 호출)
+            saveGameResult();
+        }
+
+        // 게임 결과 서버에 저장
+        async function saveGameResult() {
+            const gameResult = {
+                gameResult: gameState.score >= 100 ? 1 : 0, // 100점 이상이면 성공
+                gameScore: gameState.score,
+                gameNo: 1, // 한글받기 게임 번호
+                userNo: 1  // 실제로는 로그인한 사용자 번호를 사용
+            };
+
+            try {
+                // Spring Boot API 엔드포인트로 전송
+                // const response = await fetch('/api/game/save', {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify(gameResult)
+                // });
+
+                console.log('게임 결과 저장:', gameResult);
+                // alert('게임 결과가 저장되었습니다!');
+            } catch (error) {
+                console.error('게임 결과 저장 실패:', error);
+            }
+        }
+    </script>
+</body>
+
+</html>
