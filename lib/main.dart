@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/game/game.dart';
+import 'package:saykoreanapp_f/pages/setting/genre.dart';
 
 void main(){
   runApp( MyApp() );
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget{
         "/info" : (context) => StartPage() ,
         "/update" : (context) => StartPage() ,
         "/game": (context) => GamePage(),
+        "/genre" : (context) => StartPage(),
     },
     );
   }
