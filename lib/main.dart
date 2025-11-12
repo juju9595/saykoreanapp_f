@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/flutter_svg.dart'; // SVG 아이콘용
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
@@ -49,7 +50,8 @@ int? _toInt(dynamic v) {
 }
 // ─────────────────────────────────────────────
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
   runApp(MyApp());
 }
 
