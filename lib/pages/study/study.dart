@@ -22,6 +22,18 @@ final Dio dio = Dio(BaseOptions(
   receiveTimeout: const Duration(seconds: 12),
 ));
 
+final Uri _baseUri = Uri.parse(_detectBaseUrl());
+
+String buildUrl(String? path) {
+  if (path == null || path.isEmpty) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
+  if (path.startsWith('file://')) {
+    final p = path.replaceFirst('file://', '');
+    return _baseUri.resolve(p.startsWith('/') ? p.substring(1) : p).toString();
+  }
+  return _baseUri.resolve(path.startsWith('/') ? path.substring(1) : path).toString();
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // DTO
 class StudyDto {
@@ -227,10 +239,15 @@ class _StudyPageState extends State<StudyPage> {
   // ── 오디오
   Future<void> _play(String? url) async {
     if (url == null || url.isEmpty) return;
+
+    // 상대경로(file:///upload/..., /upload/...) → http(s) 절대경로로 변환
+    final resolved = buildUrl(url);
+
     try {
       await _player.stop();
-      await _player.play(UrlSource(url));
-    } catch (_) {}
+      await _player.play(UrlSource(resolved));
+    } catch (e) {
+    }
   }
 
   // ── 완료 처리
@@ -494,9 +511,16 @@ class _ExamCard extends StatelessWidget {
           if (exam.imagePath != null && exam.imagePath!.isNotEmpty)
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image.network(exam.imagePath!, fit: BoxFit.cover),
+              child: SizedBox(
+                width: 350, // 가로 폭 제한
+                height: 350, // 세로 폭 제한
+                child: Image.network(
+                  buildUrl(exam.imagePath),
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Center(
+                    child: Text('이미지를 불러올 수 없어요'),
+                  ),
+                ),
               ),
             ),
           const SizedBox(height: 12),

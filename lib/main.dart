@@ -11,6 +11,9 @@ import 'package:saykoreanapp_f/pages/start/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
 import 'package:saykoreanapp_f/pages/test/test.dart';
+import 'package:saykoreanapp_f/pages/test/testList.dart';
+
+
 
 // ─────────────────────────────────────────────
 // 전역 네비게이터 키
@@ -23,13 +26,26 @@ String? currentRouteName() {
   return ModalRoute.of(nav.context)?.settings.name;
 }
 
-// 안전한 페이지 이동 함수
-void goNamed(String routeName) {
+// 안전한 페이지 이동 함수 (arguments 지원)
+void goNamed(String routeName, {Object? arguments, bool replaceAll = false}) {
   final nav = appNavigatorKey.currentState;
   if (nav == null) return;
   final current = currentRouteName();
-  if (current == routeName) return;
-  nav.pushNamedAndRemoveUntil(routeName, (route) => false);
+  if (current == routeName && arguments == null) return;
+
+  if (replaceAll) {
+    nav.pushNamedAndRemoveUntil(routeName, (route) => false, arguments: arguments);
+  } else {
+    nav.pushNamed(routeName, arguments: arguments);
+  }
+}
+
+// any → int? 안전 변환
+int? _toInt(dynamic v) {
+  if (v is int) return v;
+  if (v is num) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
 }
 // ─────────────────────────────────────────────
 
@@ -44,6 +60,47 @@ class MyApp extends StatelessWidget {
       navigatorKey: appNavigatorKey,
       initialRoute: "/",
 
+      // 인자(Arguments) 필요한 라우트는 여기서 처리
+      onGenerateRoute: (settings) {
+        if (settings.name == '/testList') {
+          final studyNo = _toInt(settings.arguments);
+          return MaterialPageRoute(
+            builder: (_) => (studyNo == null)
+                ? const _RouteArgErrorPage(message: "studyNo 인자가 필요해요.")
+                : TestListPage(studyNo: studyNo),
+            settings: settings,
+          );
+        }
+
+        if (settings.name == '/test') {
+          final testNo = _toInt(settings.arguments);
+          return MaterialPageRoute(
+            builder: (_) => (testNo == null)
+                ? const _RouteArgErrorPage(message: "testNo 인자가 필요해요.")
+                : TestPage(testNo: testNo),
+            settings: settings,
+          );
+        }
+
+        // null 리턴하면 아래 routes로 위임됨
+        return null;
+      },
+
+      // 인자 불필요한 정적 라우트들
+      routes: {
+        "/"       : (context) => StartPage(),
+        "/home"   : (context) => HomePage(),
+        "/login"  : (context) => LoginPage(),
+        "/signup" : (context) => SignupPage(),
+        "/find"   : (context) => FindPage(),
+        "/info"   : (context) => Mypage(),
+        "/update" : (context) => MyInfoUpdatePage(),
+        "/game"   : (context) => GamePage(),
+        "/study"  : (context) => StudyPage(),
+        "/ranking": (context) => Ranking(),
+      },
+
+      // 공통 레이아웃 (푸터 표시/숨김)
       builder: (context, child) {
         final name = currentRouteName() ?? '';
         // 특정 화면(로그인/회원가입/시작)은 푸터 숨기기
@@ -55,24 +112,38 @@ class MyApp extends StatelessWidget {
           backgroundColor: const Color(0xFFFFF9F0),
         );
       },
-
-      routes: {
-        "/" : (context) => StartPage(),
-        "/home" : (context) => HomePage(),
-        "/login" : (context) => LoginPage(),
-        "/signup" : (context) => SignupPage(),
-        "/find" : (context) => FindPage(),
-        "/info" : (context) => Mypage(),
-        "/update" : (context) => MyInfoUpdatePage(),
-        "/game": (context) => GamePage(),
-        "/study": (context) => StudyPage(),
-        "/test": (context) => Test(),
-        "/ranking": (context) => Ranking(),
-      },
     );
   }
 }
 
+/// 인자 누락/잘못 전달 시 보여줄 간단한 에러 페이지
+class _RouteArgErrorPage extends StatelessWidget {
+  final String message;
+  const _RouteArgErrorPage({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("오류")),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(message, style: const TextStyle(fontSize: 16)),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("뒤로가기"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 // ─────────────────────────────────────────────
 // 푸터 바
 class _FooterBar extends StatelessWidget {
@@ -163,7 +234,7 @@ class _FooterBar extends StatelessWidget {
                   _btn(label: '학습',  svg: 'assets/icons/study.svg',
                       routeName: '/study',   active: current == '/study'),
                   _btn(label: '시험',  svg: 'assets/icons/test.svg',
-                      routeName: '/test',    active: current == '/test'),
+                      routeName: '/testList',    active: current == '/testList'),
                   _btn(label: '순위',  svg: 'assets/icons/rank.svg',
                       routeName: '/ranking', active: current == '/ranking'),
                 ],
