@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:saykoreanapp_f/pages/setting/language.dart';
 
@@ -12,6 +13,10 @@ class Mypage extends StatelessWidget{
           children: [
             Text("마이페이지"),
 
+            TextButton(onPressed: (){ Navigator.pushReplacement(
+              context,
+                MaterialPageRoute(builder: (context) => MyInfoUpdatePage() ));
+            }, child: Text("정보 수정") , ) ,
             // 장르 설정, 언어 설정 버튼
             TextButton(onPressed: (){ Navigator.pushReplacement(
               context,
@@ -19,15 +24,10 @@ class Mypage extends StatelessWidget{
                 } , child: Text("장르 설정") , ) ,
             TextButton(onPressed: (){ Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => Language() ));
+              MaterialPageRoute(builder: (context) => LanguagePage() ));
             } , child: Text("언어 설정") , ) ,
 
-            // 뒤로 가기 버튼
-            ElevatedButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-                child: Text("뒤로가기"))
+
           ],
         ),
       ),

@@ -6,7 +6,7 @@ import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/game/game.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
-import 'package:saykoreanapp_f/pages/my/my_page.dart';
+import 'package:saykoreanapp_f/pages/setting/myPage.dart';
 import 'package:saykoreanapp_f/pages/start/start_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
@@ -62,10 +62,10 @@ class MyApp extends StatelessWidget {
         "/login" : (context) => LoginPage(),
         "/signup" : (context) => SignupPage(),
         "/find" : (context) => FindPage(),
-        "/info" : (context) => MyPage(),
+        "/info" : (context) => Mypage(),
         "/update" : (context) => MyInfoUpdatePage(),
         "/game": (context) => GamePage(),
-        "/study": (context) => Study(),
+        "/study": (context) => StudyPage(),
         "/test": (context) => Test(),
         "/ranking": (context) => Ranking(),
       },
@@ -76,10 +76,12 @@ class MyApp extends StatelessWidget {
 // ─────────────────────────────────────────────
 // 푸터 바
 class _FooterBar extends StatelessWidget {
+  static const Color _mint = Color(0xFFA8E6CF); // 민트
   static const Color _bgTop    = Color(0xFFFFF9F0); // 크림
   static const Color _bgBottom = Color(0xFFFFF1E8); // 옅은 핑크
-  static const Color _active   = Color(0xFFFFAAA5); // 코랄핑크
+  static const Color _active   = Color(0x80FFAAA5); // 코랄핑크
   static const Color _inactive = Color(0x80FFAAA5); // 비활성(50%)
+  static const Color _textColor = Color(0xFF6B4E42); // 텍스트 컬러 브라운
 
   const _FooterBar();
 
@@ -155,7 +157,7 @@ class _FooterBar extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _btn(label: '홈',   svg: 'assets/icons/home.svg',
-                      routeName: '/home',    active: current == '/home'),
+                      routeName: '/',    active: current == '/'),
                   _btn(label: '내정보',svg: 'assets/icons/user.svg',
                       routeName: '/info',    active: current == '/info'),
                   _btn(label: '학습',  svg: 'assets/icons/study.svg',
