@@ -75,11 +75,7 @@ class _SignupState extends State<SignupPage>{
         child: Column(
           children: [
             Text("회원가입 페이지"),
-            ElevatedButton(
-                onPressed: (){
-                  Navigator.pop(context);
-                },
-                child: Text("뒤로가기"))
+          // 정유진 : 뒤로가기 삭제함
           ],
         ),
       ),
