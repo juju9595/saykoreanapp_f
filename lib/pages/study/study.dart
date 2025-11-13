@@ -298,14 +298,25 @@ class _StudyPageState extends State<StudyPage> {
   }
 
   // ── 완료 처리
+  // ── 완료 처리
   Future<void> _complete() async {
     final id = _subject?.studyNo;
     if (id == null || id <= 0) return;
 
     final prefs = await SharedPreferences.getInstance();
+
+
+    // final prev = prefs.getStringList('studies') ?? [];
+    // final Set<String> merged = {...prev, id.toString()};
+    // await prefs.setStringList('studies', merged.toList());
+
+    // 순서 유지 + 중복 방지
     final prev = prefs.getStringList('studies') ?? [];
-    final Set<String> merged = {...prev, id.toString()};
-    await prefs.setStringList('studies', merged.toList());
+    final idStr = id.toString();
+    if (!prev.contains(idStr)) {
+      prev.add(idStr); // 뒤에 붙여서 "마지막에 완료한 주제"를 알 수 있게
+    }
+    await prefs.setStringList('studies', prev);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -313,7 +324,7 @@ class _StudyPageState extends State<StudyPage> {
     );
 
     // 이동
-    Navigator.pushNamed(context, '/successList'); // 예: 시험 화면으로
+    Navigator.pushNamed(context, '/successList'); // 예: 완료 목록으로 이동
   }
 
   // ── UI
