@@ -60,8 +60,19 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 # 게임 관련 에셋들입니다
 flutter:
- uses-material-design: true
- assets:
+  uses-material-design: true
+  assets:
+    - assets/game/
+    - assets/game/receive
+    - assets/game/watermelon
+    - assets/icons/home.svg
+    - assets/icons/user.svg
+    - assets/icons/study.svg
+    - assets/icons/test.svg
+    - assets/icons/rank.svg
+    - assets/img/mascot_pair.png
+    - assets/img/top_wave.png
+    - assets/img/bgImg.png
     - assets/          # 이 한 줄로 하위 전부 포함
 
   # The following line ensures that the Material Icons font is
