@@ -32,7 +32,8 @@ dependencies:
   flutter:
     sdk: flutter
   dio: ^5.9.0
-  webview_flutter: ^4.4.2  # 최신 버전
+  webview_flutter: ^4.4.2  # WebView 지원 (게임 관련 의존성)
+  http: ^1.1.0              # HTTP 통신 (게임 관련 의존성)
   shared_preferences: ^2.5.3 # 로컬 저장
   fluttertoast: ^9.0.0 # 토스트 메시지 지원
 
@@ -61,15 +62,6 @@ dev_dependencies:
 flutter:
  uses-material-design: true
  assets:
-    - assets/game/
-    - assets/icons/home.svg
-    - assets/icons/user.svg
-    - assets/icons/study.svg
-    - assets/icons/test.svg
-    - assets/icons/rank.svg
-    - assets/img/mascot_pair.png
-    - assets/img/top_wave.png
-    - assets/img/bgImg.png
     - assets/          # 이 한 줄로 하위 전부 포함
 
   # The following line ensures that the Material Icons font is
