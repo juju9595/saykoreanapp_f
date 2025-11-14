@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/pages/test/test.dart';
 
@@ -10,7 +11,6 @@ import 'package:saykoreanapp_f/pages/test/test.dart';
 String _detectBaseUrl() {
   final env = const String.fromEnvironment('API_HOST');
   if (env.isNotEmpty) return env;
-  if (kIsWeb) return 'http://localhost:8080';
   if (kIsWeb) return 'http://localhost:8080';
   if (Platform.isAndroid) return 'http://10.0.2.2:8080';
   return 'http://localhost:8080';
@@ -51,7 +51,7 @@ class _TestListPageState extends State<TestListPage> {
     });
 
     try {
-      // 언어번호는 StudyPage에서 쓰던 selectedLangNo 그대로 사용
+      // StudyPage에서 쓰던 selectedLangNo 그대로 사용
       final prefs = await SharedPreferences.getInstance();
       _langNo = prefs.getInt('selectedLangNo') ?? 1;
 
@@ -77,7 +77,6 @@ class _TestListPageState extends State<TestListPage> {
         },
       );
 
-      // 🔹 여기서 응답이 List<TestDto> 형태라고 가정
       final list = (res.data is List) ? (res.data as List) : <dynamic>[];
       setState(() => tests = list);
     } catch (e) {
@@ -109,13 +108,12 @@ class _TestListPageState extends State<TestListPage> {
       )
           : ListView.separated(
         padding: const EdgeInsets.all(12),
-        itemCount: tests.length,               // 🔥 여기! 전체 length 사용
-        separatorBuilder: (_, __) =>
-        const SizedBox(height: 8),         // 카드 간격
+        itemCount: tests.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, i) {
           final t = tests[i];
 
-          // 안전하게 값 꺼내기
+          // testNo 안전 캐스팅
           final rawTestNo = t['testNo'];
           final testNo = (rawTestNo is int)
               ? rawTestNo
@@ -164,8 +162,6 @@ class _TestListPageState extends State<TestListPage> {
                 Icons.chevron_right,
                 color: Color(0xFF9CA3AF),
               ),
-
-              // 여기서 각 테스트 카드 클릭 시 해당 testNo로 TestPage 이동
               onTap: () {
                 Navigator.push(
                   context,
