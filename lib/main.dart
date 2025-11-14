@@ -284,23 +284,52 @@ class _FooterBar extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _btn(label: '홈',   svg: 'assets/icons/home.svg',
-                      routeName: '/',    active: current == '/start'),
-                  _btn(label: '내정보',svg: 'assets/icons/user.svg',
-                      routeName: '/info',    active: current == '/info'),
-                  _btn(label: '학습',  svg: 'assets/icons/study.svg',
-                      routeName: '/study',   active: current == '/study'),
-                  // 시험 버튼만 매개변수가 필요하기 때문에 특별 처리
-                  _testBtn(active: current == '/testList'),
-                  _btn(label: '순위',  svg: 'assets/icons/rank.svg',
-                      routeName: '/ranking', active: current == '/ranking'),
                   _btn(
-                    label: '친구', svg: 'assets/icons/friends.svg',
-                    routeName: '/friends', active: current == '/friends',),
+                    label: '홈',
+                    svg: 'assets/icons/home.svg',
+                    routeName: '/home',         // 홈 화면으로 이동
+                    active: current == '/home',
+                  ),
+                  _btn(
+                    label: '내정보',
+                    svg: 'assets/icons/user.svg',
+                    routeName: '/info',
+                    active: current == '/info',
+                  ),
+                  _btn(
+                    label: '학습',
+                    svg: 'assets/icons/study.svg',
+                    routeName: '/study',
+                    active: current == '/study',
+                  ),
+
+                  // 시험 (완수한 주제 기준)
+                  _testBtn(active: current == '/testList'),
+
+                  // ⭐ 여기 추가: 게임 버튼
+                  _btn(
+                    label: '게임',
+                    svg: 'assets/icons/game.svg',
+                    routeName: '/game',
+                    active: current == '/game',
+                  ),
+
+                  _btn(
+                    label: '순위',
+                    svg: 'assets/icons/rank.svg',
+                    routeName: '/ranking',
+                    active: current == '/ranking',
+                  ),
+                  _btn(
+                    label: '친구',
+                    svg: 'assets/icons/friends.svg',
+                    routeName: '/friends',
+                    active: current == '/friends',
+                  ),
                 ],
               ),
             ),
-          ),
+  ),
         ),
       ),
     );
