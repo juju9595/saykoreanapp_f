@@ -29,8 +29,7 @@ class _LoginState extends State<LoginPage>{
       print(sendData);
       // baseUrl + path만 사용
       final response = await ApiClient.dio.post(
-        // '/saykorean/login'     // 슬래시로 시작하는 path만 적기
-        'http://10.0.2.2:8080/saykorean/login',
+        '/saykorean/login',     // 슬래시로 시작하는 path만 적기
         data: sendData,
         options: Options(
           headers: {'Content-Type': 'application/json'},
