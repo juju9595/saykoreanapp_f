@@ -103,7 +103,7 @@ class FriendsApi {
       "/friends/list",
       queryParameters: {
         "userNo": userNo,
-      },
+      },//
     );
     print("서버 응답: ${res.data}");
 
