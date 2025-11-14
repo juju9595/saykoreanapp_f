@@ -129,6 +129,25 @@ class _FriendsPageState extends State<FriendsPage>
     }
   }
 
+  // 거절
+  Future<void> _refusal(FriendRequest req) async {
+    try {
+      final ok = await _api.refusalFriend(
+        offer: req.offer,
+        receiver: widget.myUserNo,
+      );
+
+      if (ok) {
+        _showSnack("요청을 거절했습니다.");
+        await _loadRequests(); // 목록 갱신
+      } else {
+        _showError("이미 처리된 요청이거나 존재하지 않습니다.");
+      }
+    } catch (e) {
+      _showError("거절 실패\n$e");
+    }
+  }
+
   // 삭제
   Future<void> _delete(Friend friend) async {
     try {

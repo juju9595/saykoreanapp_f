@@ -46,6 +46,15 @@ class FriendsApi {
     );
   }
 
+  /// 친구 거절
+  Future<bool> refusalFriend({
+    required int offer, required int receiver,
+  }) async {
+    final res = await _dio.delete("/refusal",
+        queryParameters: {"offer" : offer, "receiver" :receiver});
+    return res.data == true;
+  }
+
   /// 친구 삭제
   Future<void> deleteFriend({
     required int offer,
@@ -72,6 +81,20 @@ class FriendsApi {
         "receiver": receiver,
       },
     );
+  }
+
+  //요청 목록
+  Future<List<FriendRequest>> fetchRequests(int myUserNo) async {
+    final res = await _dio.get(
+      "/friends/requests/recv",
+      queryParameters: {
+        "userNo": myUserNo,   // <= 이게 꼭 들어가 있어야 함!!!
+      },
+    );
+
+    return (res.data as List)
+        .map((e) => FriendRequest.fromJson(e))
+        .toList();
   }
 
   /// 친구 목록 조회
