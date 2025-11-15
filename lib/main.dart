@@ -6,6 +6,7 @@ import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/friends/friends.dart';
 import 'package:saykoreanapp_f/pages/game/game.dart';
+import 'package:saykoreanapp_f/pages/game/game_list_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
@@ -120,7 +121,7 @@ class MyApp extends StatelessWidget {
         "/find": (context) => FindPage(), // 계정/비번 찾기
         "/info": (context) => MyPage(), // 내정보(마이페이지)
         "/update": (context) => MyInfoUpdatePage(), // 내정보 수정
-        "/game": (context) => GamePage(), // 게임
+        "/game": (context) => GameListPage(), // 게임 목록 페이지
         "/study": (context) => StudyPage(), // 학습
         // "/test"   : (context) => TestPage(testNo: testNo),
         "/ranking": (context) => Ranking(), // 순위

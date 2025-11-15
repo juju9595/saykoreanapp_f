@@ -1,3 +1,13 @@
+<!-- 개선해야할 거
+    1) 다시 시작 시 하트가 검은색인 채로 렌더링 되는 문제
+    2) 터치 화살표바 시인성 개선 (버튼이 너무 커서 플레이어가 캐릭터 위치를 제대로 볼 수 없음)
+    3) 보스 기믹 추가    1. 운율수호자 (자음, 모음, 자음, 모음, 자음 순서대로 한글을 받아내야 합니다. 10번 연속으로 성공하면 기믹을 통과합니다.)
+                        2. 단어조각가 (자음과 모음을 단어가 되도록 받아야합니다. 3번 성공하면 기믹을 통과합니다.)
+                        3. 혼종추방자 (15초 동안 이중모음, 이중자음을 피하고 다른 것만 받아야함)
+                        4. 받침사랑꾼 ('받침'이 될 수 있는 자음만 7번 연속 받아야 통과)
+    4) 하트, 쉴드 등 아이템 추가
+-->
+
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -66,6 +76,58 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
+        /* 보스 기믹 알림 */
+        .boss-alert {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 95;
+            animation: fadeIn 0.3s;
+        }
+
+        .boss-character {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 20px;
+            animation: bossAppear 0.5s;
+        }
+
+        @keyframes bossAppear {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .boss-title {
+            color: #ffd700;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .boss-description {
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            line-height: 1.6;
+            padding: 0 30px;
+            margin-bottom: 20px;
+        }
+
+        .boss-progress {
+            color: #00ff00;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
         .countdown-overlay {
             position: absolute;
             top: 0;
@@ -96,25 +158,13 @@
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .game-canvas {
@@ -160,8 +210,24 @@
             border: 3px solid #f093fb;
         }
 
-        .game-over-screen,
-        .start-screen {
+        .double-letter {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffd93d 100%);
+            color: white;
+            border: 3px solid #ff6b6b;
+        }
+
+        .item-powerup {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            font-size: 24px;
+            animation: itemFloat 1s infinite;
+        }
+
+        @keyframes itemFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .game-over-screen, .start-screen {
             position: absolute;
             top: 0;
             left: 0;
@@ -176,8 +242,7 @@
             z-index: 100;
         }
 
-        .game-over-screen h2,
-        .start-screen h2 {
+        .game-over-screen h2, .start-screen h2 {
             font-size: 36px;
             margin-bottom: 20px;
             color: #fff;
@@ -237,426 +302,527 @@
             transform: scale(1.1);
         }
 
+        /* 개선된 모바일 컨트롤 - 시인성 향상 */
         .mobile-controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 40px;
+            gap: 100px;
             z-index: 105;
-            /* 게임 화면 위 */
         }
 
         .mobile-controls button {
-            font-size: 30px;
-            padding: 10px 20px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.7);
-            border: none;
+            font-size: 24px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.5);
             cursor: pointer;
             user-select: none;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
+        }
+
+        .mobile-controls button:active {
+            background: rgba(255, 255, 255, 0.5);
+            transform: scale(0.95);
+        }
+
+        /* 아이템 효과 표시 */
+        .item-effect {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ff00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            z-index: 80;
+            animation: effectFadeOut 1s forwards;
+        }
+
+        @keyframes effectFadeOut {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -80%) scale(1.5); }
         }
     </style>
 </head>
 
 <body>
-    <!-- BGM 오디오 (autoplay는 사용자 인터랙션 후 시작) -->
-    <audio id="bgm" loop>
-        <source src="bgm.mp3" type="audio/mpeg">
-    </audio>
+<audio id="bgm" loop>
+    <source src="bgm.mp3" type="audio/mpeg">
+</audio>
 
-    <div class="game-container">
-        <!-- 사운드 토글 버튼 -->
-        <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
+<div class="game-container">
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()">🔊</button>
 
-        <!-- 시작 화면 -->
-        <div class="start-screen" id="startScreen">
-            <h2>🎮 토돌이 한글 받기</h2>
-            <div class="instructions">
-                <p>⬅️ ➡️ 방향키로 토돌이를 움직여요!</p>
-                <p><strong style="color: #667eea;">자음 턴</strong>에는 자음만,</p>
-                <p><strong style="color: #f093fb;">모음 턴</strong>에는 모음만 받아요!</p>
-                <p>❤️ 하트가 0이 되면 게임 오버!</p>
-            </div>
-            <button class="btn" onclick="startGame()">게임 시작</button>
+    <!-- 시작 화면 -->
+    <div class="start-screen" id="startScreen">
+        <h2>🎮 토돌이 한글 받기</h2>
+        <div class="instructions">
+            <p>⬅️ ➡️ 방향키로 토돌이를 움직여요!</p>
+            <p><strong style="color: #667eea;">자음 턴</strong>에는 자음만,</p>
+            <p><strong style="color: #f093fb;">모음 턴</strong>에는 모음만 받아요!</p>
+            <p>❤️ 하트가 0이 되면 게임 오버!</p>
+            <p style="color: #ffd700; margin-top: 10px;">🎯 보스 기믹을 통과하면 보너스 점수!</p>
         </div>
-
-        <!-- 게임 헤더 -->
-        <div class="game-header">
-            <div class="score">점수: <span id="score">0</span></div>
-            <div class="hearts" id="hearts">
-                <span class="heart">❤️</span>
-                <span class="heart">❤️</span>
-                <span class="heart">❤️</span>
-            </div>
-        </div>
-
-        <!-- 턴 표시 -->
-        <div class="turn-indicator" id="turnIndicator">
-            자음 턴
-        </div>
-
-        <!-- 게임 캔버스 -->
-        <div class="game-canvas" id="gameCanvas">
-            <div class="character" id="character">
-                <!-- Standing 이미지 (기본) -->
-                <img id="standingTodoli" class="character-img" src="standing_todoli.png" alt="Standing Todoli"
-                     style="display: block;">
-
-                <!-- Running Left 이미지 (왼쪽으로 움직일 때) -->
-                <img id="runLeftTodoli" class="character-img" src="run_todoli_left.png" alt="Running Left Todoli"
-                     style="display: none;">
-
-                <!-- Running Right 이미지 (오른쪽으로 움직일 때) -->
-                <img id="runRightTodoli" class="character-img" src="run_todoli_right.png" alt="Running Right Todoli"
-                     style="display: none;">
-            </div>
-        </div>
-
-        <!-- 게임 오버 화면 -->
-        <div class="game-over-screen" id="gameOverScreen" style="display: none;">
-            <h2>게임 오버!</h2>
-            <div class="final-score">최종 점수: <span id="finalScore">0</span></div>
-            <button class="btn" onclick="restartGame()">다시 시작</button>
-        </div>
-
-        <!-- 모바일 터치 컨트롤 -->
-        <div class="mobile-controls">
-            <button onmousedown="moveLeft()" onmouseup="stopMove()" ontouchstart="moveLeft()"
-                ontouchend="stopMove()">⬅️</button>
-            <button onmousedown="moveRight()" onmouseup="stopMove()" ontouchstart="moveRight()"
-                ontouchend="stopMove()">➡️</button>
-        </div>
-
+        <button class="btn" onclick="startGame()">게임 시작</button>
     </div>
 
-    <script>
-        // BGM 요소
-        const bgm = document.getElementById('bgm');
-        const soundToggle = document.getElementById('soundToggle');
-        let isSoundOn = true;
+    <!-- 보스 기믹 알림 -->
+    <div class="boss-alert" id="bossAlert">
+        <img class="boss-character" id="bossCharacter" src="" alt="Boss">
+        <div class="boss-title" id="bossTitle"></div>
+        <div class="boss-description" id="bossDescription"></div>
+        <div class="boss-progress" id="bossProgress"></div>
+    </div>
 
-        // 사운드 토글
-        function toggleSound() {
-            isSoundOn = !isSoundOn;
-            if (isSoundOn) {
-                bgm.play();
-                soundToggle.textContent = '🔊';
-            } else {
-                bgm.pause();
-                soundToggle.textContent = '🔇';
-            }
+    <!-- 게임 헤더 -->
+    <div class="game-header">
+        <div class="score">점수: <span id="score">0</span></div>
+        <div class="hearts" id="hearts">
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+            <span class="heart">❤️</span>
+        </div>
+    </div>
+
+    <!-- 턴 표시 -->
+    <div class="turn-indicator" id="turnIndicator">자음 턴</div>
+
+    <!-- 게임 캔버스 -->
+    <div class="game-canvas" id="gameCanvas">
+        <div class="character" id="character">
+            <img id="standingTodoli" class="character-img" src="standing_todoli.png" alt="Standing Todoli" style="display: block;">
+            <img id="runLeftTodoli" class="character-img" src="run_todoli_left.png" alt="Running Left Todoli" style="display: none;">
+            <img id="runRightTodoli" class="character-img" src="run_todoli_right.png" alt="Running Right Todoli" style="display: none;">
+        </div>
+    </div>
+
+    <!-- 게임 오버 화면 -->
+    <div class="game-over-screen" id="gameOverScreen" style="display: none;">
+        <h2>게임 오버!</h2>
+        <div class="final-score">최종 점수: <span id="finalScore">0</span></div>
+        <button class="btn" onclick="restartGame()">다시 시작</button>
+    </div>
+
+    <!-- 모바일 터치 컨트롤 (개선됨) -->
+    <div class="mobile-controls">
+        <button onmousedown="moveLeft()" onmouseup="stopMove()" ontouchstart="moveLeft()" ontouchend="stopMove()">◀</button>
+        <button onmousedown="moveRight()" onmouseup="stopMove()" ontouchstart="moveRight()" ontouchend="stopMove()">▶</button>
+    </div>
+</div>
+
+<script>
+    const bgm = document.getElementById('bgm');
+    const soundToggle = document.getElementById('soundToggle');
+    let isSoundOn = true;
+
+    function toggleSound() {
+        isSoundOn = !isSoundOn;
+        if (isSoundOn) {
+            bgm.play();
+            soundToggle.textContent = '🔊';
+        } else {
+            bgm.pause();
+            soundToggle.textContent = '🔇';
+        }
+    }
+
+    // 보스 기믹 데이터
+    const bossMechanics = {
+        rhythm: {
+            name: '운율수호자',
+            image: 'rhythm.png',
+            description: '자음, 모음, 자음, 모음, 자음 순서로\n한글을 받아내세요!\n5번 연속 성공하면 통과!',
+            targetCount: 5,
+            pattern: ['consonant', 'vowel', 'consonant', 'vowel', 'consonant'],
+            bonus: 500
+        },
+        sculpting: {
+            name: '단어조각가',
+            image: 'sculpting.png',
+            description: '자음과 모음을 조합해\n단어가 되도록 받으세요!\n(자음+모음 3세트 완성)',
+            targetCount: 3,
+            bonus: 300
+        },
+        outlaw: {
+            name: '혼종추방자',
+            image: 'outlaw.png',
+            description: '15초 동안 이중모음, 이중자음을\n피하고 다른 것만 받으세요!',
+            duration: 15,
+            bonus: 400
+        },
+        bottom_love: {
+            name: '받침사랑꾼',
+            image: 'bottom_love.png',
+            description: '받침이 될 수 있는 자음만\n7번 연속 받으세요!',
+            targetCount: 7,
+            bonus: 350
+        }
+    };
+
+    let gameState = {
+        score: 0,
+        hearts: 3,
+        shield: 0,
+        isRunning: false,
+        currentTurn: 'consonant',
+        characterPosition: 160,
+        fallingItems: [],
+        turnCount: 0,
+        itemsCaught: 0,
+        isCountingDown: false,
+        bossActive: false,
+        currentBoss: null,
+        bossProgress: 0,
+        bossStartTime: 0,
+        bossPatternIndex: 0,
+        lastWordPart: null
+    };
+
+    const consonants = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    const vowels = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
+    const doubleConsonants = ['ㄲ', 'ㄸ', 'ㅃ', 'ㅆ', 'ㅉ'];
+    const doubleVowels = ['ㅐ', 'ㅒ', 'ㅔ', 'ㅖ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅢ'];
+    const finalConsonants = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅇ']; // 받침 가능 자음
+
+    const character = document.getElementById('character');
+    const gameCanvas = document.getElementById('gameCanvas');
+    const scoreElement = document.getElementById('score');
+    const heartsElement = document.getElementById('hearts');
+    const turnIndicator = document.getElementById('turnIndicator');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const startScreen = document.getElementById('startScreen');
+    const standingTodoli = document.getElementById('standingTodoli');
+    const runLeftTodoli = document.getElementById('runLeftTodoli');
+    const runRightTodoli = document.getElementById('runRightTodoli');
+    const bossAlert = document.getElementById('bossAlert');
+
+    let isMoving = false;
+    let movingTimeout = null;
+    let currentDirection = 'none';
+
+    let keys = {};
+    document.addEventListener('keydown', (e) => { keys[e.key] = true; });
+    document.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+    let touchDirection = 'none';
+    let touchInterval = null;
+
+    function moveLeft() {
+        touchDirection = 'left';
+        if (!touchInterval) {
+            touchInterval = setInterval(() => {
+                if (gameState.characterPosition > 0) {
+                    gameState.characterPosition -= 5;
+                }
+            }, 16);
+        }
+    }
+
+    function moveRight() {
+        touchDirection = 'right';
+        if (!touchInterval) {
+            touchInterval = setInterval(() => {
+                if (gameState.characterPosition < 320) {
+                    gameState.characterPosition += 5;
+                }
+            }, 16);
+        }
+    }
+
+    function stopMove() {
+        touchDirection = 'none';
+        clearInterval(touchInterval);
+        touchInterval = null;
+    }
+
+    function startGame() {
+        startScreen.style.display = 'none';
+        if (isSoundOn) {
+            bgm.play().catch(err => console.log('BGM 자동재생 실패:', err));
         }
 
-        // 게임 상태
-        let gameState = {
+        gameState = {
             score: 0,
             hearts: 3,
-            isRunning: false,
-            currentTurn: 'consonant', // 'consonant' or 'vowel'
+            shield: 0,
+            isRunning: true,
+            currentTurn: 'consonant',
             characterPosition: 160,
             fallingItems: [],
             turnCount: 0,
             itemsCaught: 0,
-            isCountingDown: false
+            isCountingDown: false,
+            bossActive: false,
+            currentBoss: null,
+            bossProgress: 0,
+            bossStartTime: 0,
+            bossPatternIndex: 0,
+            lastWordPart: null
         };
+        updateUI();
+        updateHearts(); // 초기 하트 렌더링
+        gameLoop();
+        spawnItems();
+    }
 
-        // 한글 자음과 모음
-        const consonants = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
-        const vowels = ['ㅏ', 'ㅑ', 'ㅓ', 'ㅕ', 'ㅗ', 'ㅛ', 'ㅜ', 'ㅠ', 'ㅡ', 'ㅣ'];
+    function restartGame() {
+        gameOverScreen.style.display = 'none';
+        document.querySelectorAll('.falling-item').forEach(item => item.remove());
+        startGame();
+    }
 
-        // DOM 요소
-        const character = document.getElementById('character');
-        const gameCanvas = document.getElementById('gameCanvas');
-        const scoreElement = document.getElementById('score');
-        const heartsElement = document.getElementById('hearts');
-        const turnIndicator = document.getElementById('turnIndicator');
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const startScreen = document.getElementById('startScreen');
-        const standingTodoli = document.getElementById('standingTodoli');
-        const runLeftTodoli = document.getElementById('runLeftTodoli');
-        const runRightTodoli = document.getElementById('runRightTodoli');
+    // 보스 기믹 시작
+    function startBossMechanic() {
+        const bossKeys = Object.keys(bossMechanics);
+        const randomBoss = bossKeys[Math.floor(Math.random() * bossKeys.length)];
+        const boss = bossMechanics[randomBoss];
 
-        // 캐릭터 이동 상태
-        let isMoving = false;
-        let movingTimeout = null;
-        let currentDirection = 'none'; // 'left', 'right', 'none'
+        gameState.bossActive = true;
+        gameState.currentBoss = randomBoss;
+        gameState.bossProgress = 0;
+        gameState.bossStartTime = Date.now();
+        gameState.bossPatternIndex = 0;
+        gameState.lastWordPart = null;
 
-        // 키보드 입력
-        let keys = {};
-        document.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-        });
-        document.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
-        });
+        // 보스 알림 표시
+        document.getElementById('bossCharacter').src = boss.image;
+        document.getElementById('bossTitle').textContent = `⚡ ${boss.name} ⚡`;
+        document.getElementById('bossDescription').textContent = boss.description;
+        document.getElementById('bossProgress').textContent = '';
+        bossAlert.style.display = 'flex';
 
-        // 터치 이동
-        let touchDirection = 'none';
-        let touchInterval = null;
+        setTimeout(() => {
+            bossAlert.style.display = 'none';
+        }, 3000);
+    }
 
-        function moveLeft() {
-            touchDirection = 'left';
-            if (!touchInterval) {
-                touchInterval = setInterval(() => {
-                    if (gameState.characterPosition > 0) {
-                        gameState.characterPosition -= 5;
+    // 보스 기믹 체크
+    function checkBossMechanic(caughtItem) {
+        if (!gameState.bossActive) return true;
+
+        const boss = bossMechanics[gameState.currentBoss];
+        let success = false;
+
+        switch (gameState.currentBoss) {
+            case 'rhythm':
+                const expectedType = boss.pattern[gameState.bossPatternIndex % boss.pattern.length];
+                if (caughtItem.type === expectedType) {
+                    gameState.bossProgress++;
+                    gameState.bossPatternIndex++;
+                    success = true;
+
+                    if (gameState.bossProgress >= boss.targetCount) {
+                        completeBoss();
                     }
-                }, 16); // 약 60fps
-            }
-        }
+                } else {
+                    gameState.bossProgress = 0;
+                    gameState.bossPatternIndex = 0;
+                }
+                break;
 
-        function moveRight() {
-            touchDirection = 'right';
-            if (!touchInterval) {
-                touchInterval = setInterval(() => {
-                    if (gameState.characterPosition < 320) {
-                        gameState.characterPosition += 5;
+            case 'sculpting':
+                if (!gameState.lastWordPart) {
+                    if (caughtItem.type === 'consonant') {
+                        gameState.lastWordPart = 'consonant';
+                        success = true;
                     }
-                }, 16);
+                } else if (gameState.lastWordPart === 'consonant' && caughtItem.type === 'vowel') {
+                    gameState.bossProgress++;
+                    gameState.lastWordPart = null;
+                    success = true;
+
+                    if (gameState.bossProgress >= boss.targetCount) {
+                        completeBoss();
+                    }
+                } else {
+                    gameState.lastWordPart = null;
+                }
+                break;
+
+            case 'outlaw':
+                const elapsed = (Date.now() - gameState.bossStartTime) / 1000;
+
+                if (caughtItem.isDouble) {
+                    gameState.bossActive = false;
+                    showItemEffect('❌ 실패!');
+                    return false;
+                }
+
+                success = true;
+
+                if (elapsed >= boss.duration) {
+                    completeBoss();
+                }
+                break;
+
+            case 'bottom_love':
+                if (caughtItem.type === 'consonant' && finalConsonants.includes(caughtItem.letter)) {
+                    gameState.bossProgress++;
+                    success = true;
+
+                    if (gameState.bossProgress >= boss.targetCount) {
+                        completeBoss();
+                    }
+                } else {
+                    gameState.bossProgress = 0;
+                }
+                break;
+        }
+
+        updateBossProgress();
+        return success;
+    }
+
+    function updateBossProgress() {
+        if (!gameState.bossActive) return;
+
+        const boss = bossMechanics[gameState.currentBoss];
+        let progressText = '';
+
+        if (gameState.currentBoss === 'outlaw') {
+            const elapsed = Math.floor((Date.now() - gameState.bossStartTime) / 1000);
+            const remaining = boss.duration - elapsed;
+            progressText = `⏱️ ${remaining}초 남음`;
+        } else {
+            progressText = `진행: ${gameState.bossProgress}/${boss.targetCount}`;
+        }
+
+        turnIndicator.textContent = `🎯 ${boss.name} - ${progressText}`;
+        turnIndicator.style.color = '#ff6b35';
+    }
+
+    function completeBoss() {
+        const boss = bossMechanics[gameState.currentBoss];
+        gameState.score += boss.bonus;
+        gameState.bossActive = false;
+
+        showItemEffect(`✨ +${boss.bonus}점!`);
+        updateUI();
+        updateTurnIndicator();
+    }
+
+    function spawnItems() {
+        if (!gameState.isRunning || gameState.isCountingDown) return;
+
+        const item = document.createElement('div');
+        item.className = 'falling-item';
+
+        let itemType, letter, isDouble = false, isItem = false;
+
+        // 10% 확률로 아이템 드롭
+        if (Math.random() < 0.1) {
+            isItem = true;
+            item.textContent = Math.random() < 0.5 ? '❤️' : '🛡️';
+            item.className = 'falling-item item-powerup';
+            item.dataset.itemType = item.textContent === '❤️' ? 'heart' : 'shield';
+        } else if (gameState.bossActive && gameState.currentBoss === 'outlaw') {
+            // 혼종추방자 기믹: 이중자음/모음 포함
+            if (Math.random() < 0.4) {
+                isDouble = true;
+                const doubles = [...doubleConsonants, ...doubleVowels];
+                letter = doubles[Math.floor(Math.random() * doubles.length)];
+                itemType = doubleConsonants.includes(letter) ? 'consonant' : 'vowel';
+                item.className = 'falling-item double-letter';
+            } else {
+                itemType = Math.random() < 0.5 ? 'consonant' : 'vowel';
+                const letters = itemType === 'consonant' ? consonants : vowels;
+                letter = letters[Math.floor(Math.random() * letters.length)];
+                item.className = `falling-item ${itemType}`;
             }
-        }
-
-        function stopMove() {
-            touchDirection = 'none';
-            clearInterval(touchInterval);
-            touchInterval = null;
-        }
-
-
-        // 게임 시작
-        function startGame() {
-            startScreen.style.display = 'none';
-
-            // BGM 시작 (사용자 인터랙션 후)
-            if (isSoundOn) {
-                bgm.play().catch(err => console.log('BGM 자동재생 실패:', err));
-            }
-
-            gameState = {
-                score: 0,
-                hearts: 3,
-                isRunning: true,
-                currentTurn: 'consonant',
-                characterPosition: 160,
-                fallingItems: [],
-                turnCount: 0,
-                itemsCaught: 0,
-                isCountingDown: false
-            };
-            updateUI();
-            gameLoop();
-            spawnItems();
-        }
-
-        // 게임 재시작
-        function restartGame() {
-            gameOverScreen.style.display = 'none';
-            // 떨어지는 아이템 제거
-            document.querySelectorAll('.falling-item').forEach(item => item.remove());
-            startGame();
-        }
-
-        // 떨어지는 아이템 생성
-        function spawnItems() {
-            if (!gameState.isRunning || gameState.isCountingDown) return;
-
-            const item = document.createElement('div');
-            item.className = 'falling-item';
-
-            // 랜덤하게 자음 또는 모음 선택 (70% 현재 턴, 30% 반대 턴)
+            item.textContent = letter;
+        } else {
             const isCurrentTurn = Math.random() < 0.7;
-            const isConsonant = isCurrentTurn ?
-                (gameState.currentTurn === 'consonant') :
-                (gameState.currentTurn === 'vowel');
+            itemType = isCurrentTurn ?
+                gameState.currentTurn :
+                (gameState.currentTurn === 'consonant' ? 'vowel' : 'consonant');
 
-            const letters = isConsonant ? consonants : vowels;
-            const letter = letters[Math.floor(Math.random() * letters.length)];
+            const letters = itemType === 'consonant' ? consonants : vowels;
+            letter = letters[Math.floor(Math.random() * letters.length)];
 
             item.textContent = letter;
-            item.className = `falling-item ${isConsonant ? 'consonant' : 'vowel'}`;
-            item.dataset.type = isConsonant ? 'consonant' : 'vowel';
-            item.style.left = Math.random() * 330 + 'px';
-            item.style.top = '-50px';
-
-            gameCanvas.appendChild(item);
-            gameState.fallingItems.push({
-                element: item,
-                y: -50,
-                x: parseFloat(item.style.left)
-            });
-
-            // 다음 아이템 생성
-            setTimeout(spawnItems, 1500 - Math.min(gameState.score * 10, 800));
+            item.className = `falling-item ${itemType}`;
         }
 
-        // 턴 변경 카운트다운
-        function startTurnCountdown() {
-            gameState.isCountingDown = true;
+        item.dataset.type = itemType;
+        item.dataset.letter = letter;
+        item.dataset.isDouble = isDouble;
+        item.dataset.isItem = isItem;
+        item.style.left = Math.random() * 330 + 'px';
+        item.style.top = '-50px';
 
-            const nextTurn = gameState.currentTurn === 'consonant' ? '모음' : '자음';
+        gameCanvas.appendChild(item);
+        gameState.fallingItems.push({
+            element: item,
+            y: -50,
+            x: parseFloat(item.style.left)
+        });
 
-            // 카운트다운 오버레이 생성
-            const overlay = document.createElement('div');
-            overlay.className = 'countdown-overlay';
-            overlay.innerHTML = `
-                <div class="countdown-text">다음 턴: ${nextTurn} 턴</div>
-                <div class="countdown-number" id="countdownNumber">3</div>
-            `;
-            gameCanvas.appendChild(overlay);
+        setTimeout(spawnItems, 1500 - Math.min(gameState.score * 10, 800));
+    }
 
-            let count = 3;
-            const countdownInterval = setInterval(() => {
-                count--;
-                const numberElement = document.getElementById('countdownNumber');
-                if (numberElement) {
-                    if (count > 0) {
-                        numberElement.textContent = count;
-                    } else {
-                        numberElement.textContent = '시작!';
-                        numberElement.style.color = '#00ff00';
-                    }
+    function startTurnCountdown() {
+        gameState.isCountingDown = true;
+        const nextTurn = gameState.currentTurn === 'consonant' ? '모음' : '자음';
+
+        const overlay = document.createElement('div');
+        overlay.className = 'countdown-overlay';
+        overlay.innerHTML = `
+            <div class="countdown-text">다음 턴: ${nextTurn} 턴</div>
+            <div class="countdown-number" id="countdownNumber">3</div>
+        `;
+        gameCanvas.appendChild(overlay);
+
+        let count = 3;
+        const countdownInterval = setInterval(() => {
+            count--;
+            const numberElement = document.getElementById('countdownNumber');
+            if (numberElement) {
+                if (count > 0) {
+                    numberElement.textContent = count;
+                } else {
+                    numberElement.textContent = '시작!';
+                    numberElement.style.color = '#00ff00';
                 }
-
-                if (count < 0) {
-                    clearInterval(countdownInterval);
-                    overlay.remove();
-
-                    // 실제 턴 변경
-                    gameState.currentTurn = gameState.currentTurn === 'consonant' ? 'vowel' : 'consonant';
-                    updateTurnIndicator();
-                    gameState.isCountingDown = false;
-
-                    // 아이템 생성 재개
-                    spawnItems();
-                }
-            }, 1000);
-        }
-
-        // 게임 루프
-        function gameLoop() {
-            if (!gameState.isRunning) return;
-
-            // 키보드 + 터치 이동
-            let moved = false;
-            let direction = 'none';
-
-            if (keys['ArrowLeft'] || touchDirection === 'left') {
-                if (gameState.characterPosition > 0) {
-                    gameState.characterPosition -= 5;
-                }
-                moved = true;
-                direction = 'left';
             }
 
-            if (keys['ArrowRight'] || touchDirection === 'right') {
-                if (gameState.characterPosition < 320) {
-                    gameState.characterPosition += 5;
+            if (count < 0) {
+                clearInterval(countdownInterval);
+                overlay.remove();
+                gameState.currentTurn = gameState.currentTurn === 'consonant' ? 'vowel' : 'consonant';
+                gameState.turnCount++;
+
+                // 5턴마다 보스 기믹 발동
+                if (gameState.turnCount % 5 === 0 && gameState.turnCount > 0) {
+                    startBossMechanic();
                 }
-                moved = true;
-                direction = 'right';
+
+                updateTurnIndicator();
+                gameState.isCountingDown = false;
+                spawnItems();
             }
+        }, 1000);
+    }
 
-            // 이미지 전환
-            if (moved) {
-                if (!isMoving || currentDirection !== direction) {
-                    isMoving = true;
-                    currentDirection = direction;
+    function showItemEffect(text) {
+        const effect = document.createElement('div');
+        effect.className = 'item-effect';
+        effect.textContent = text;
+        gameCanvas.appendChild(effect);
 
-                    // 모든 이미지 숨기기
-                    standingTodoli.style.display = 'none';
-                    runLeftTodoli.style.display = 'none';
-                    runRightTodoli.style.display = 'none';
+        setTimeout(() => {
+            effect.remove();
+        }, 1000);
+    }
 
-                    // 방향에 맞는 이미지 표시
-                    if (direction === 'left') {
-                        runLeftTodoli.style.display = 'block';
-                    } else if (direction === 'right') {
-                        runRightTodoli.style.display = 'block';
-                    }
-                }
+    function gameLoop() {
+        if (!gameState.isRunning) return;
 
-                // 멈춘 후 0.2초 뒤 standing으로 전환
-                clearTimeout(movingTimeout);
-                movingTimeout = setTimeout(() => {
-                    isMoving = false;
-                    currentDirection = 'none';
-                    standingTodoli.style.display = 'block';
-                    runLeftTodoli.style.display = 'none';
-                    runRightTodoli.style.display = 'none';
-                }, 200);
-            }
-
-            character.style.left = gameState.characterPosition + 'px';
-
-            // 아이템 떨어뜨리기
-            gameState.fallingItems.forEach((item, index) => {
-                item.y += 3;
-                item.element.style.top = item.y + 'px';
-
-                // 충돌 체크
-                const charRect = {
-                    left: gameState.characterPosition,
-                    right: gameState.characterPosition + 60,
-                    top: 400,
-                    bottom: 460
-                };
-
-                const itemRect = {
-                    left: item.x,
-                    right: item.x + 50,
-                    top: item.y,
-                    bottom: item.y + 50
-                };
-
-                if (charRect.left < itemRect.right &&
-                    charRect.right > itemRect.left &&
-                    charRect.top < itemRect.bottom &&
-                    charRect.bottom > itemRect.top) {
-
-                    // 충돌 발생
-                    const itemType = item.element.dataset.type;
-                    if (itemType === gameState.currentTurn) {
-                        // 올바른 아이템
-                        gameState.score += 10;
-                        gameState.itemsCaught++;
-                        item.element.style.background = 'rgba(0, 255, 0, 0.5)';
-
-                        // 턴 변경 (5개마다, 카운트다운 실행)
-                        if (gameState.itemsCaught >= 5) {
-                            gameState.itemsCaught = 0;
-                            startTurnCountdown();
-                        }
-                    } else {
-                        // 잘못된 아이템
-                        gameState.hearts--;
-                        item.element.style.background = 'rgba(255, 0, 0, 0.5)';
-                        updateHearts();
-
-                        if (gameState.hearts <= 0) {
-                            gameOver();
-                        }
-                    }
-
-                    setTimeout(() => {
-                        item.element.remove();
-                    }, 100);
-                    gameState.fallingItems.splice(index, 1);
-                    updateUI();
-                }
-
-                // 화면 밖으로 나간 아이템 제거
-                if (item.y > 460) {
-                    item.element.remove();
-                    gameState.fallingItems.splice(index, 1);
-                }
-            });
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        // 키보드 이동
         let moved = false;
         let direction = 'none';
 
@@ -676,62 +842,190 @@
             direction = 'right';
         }
 
-        // UI 업데이트
-        function updateUI() {
-            scoreElement.textContent = gameState.score;
+        if (moved) {
+            if (!isMoving || currentDirection !== direction) {
+                isMoving = true;
+                currentDirection = direction;
+                standingTodoli.style.display = 'none';
+                runLeftTodoli.style.display = 'none';
+                runRightTodoli.style.display = 'none';
+
+                if (direction === 'left') {
+                    runLeftTodoli.style.display = 'block';
+                } else if (direction === 'right') {
+                    runRightTodoli.style.display = 'block';
+                }
+            }
+
+            clearTimeout(movingTimeout);
+            movingTimeout = setTimeout(() => {
+                isMoving = false;
+                currentDirection = 'none';
+                standingTodoli.style.display = 'block';
+                runLeftTodoli.style.display = 'none';
+                runRightTodoli.style.display = 'none';
+            }, 200);
         }
 
-        function updateHearts() {
-            heartsElement.innerHTML = '';
-            for (let i = 0; i < gameState.hearts; i++) {
-                heartsElement.innerHTML += '<span class="heart">❤️</span>';
+        character.style.left = gameState.characterPosition + 'px';
+
+        gameState.fallingItems.forEach((item, index) => {
+            item.y += 3;
+            item.element.style.top = item.y + 'px';
+
+            const charRect = {
+                left: gameState.characterPosition,
+                right: gameState.characterPosition + 60,
+                top: 400,
+                bottom: 460
+            };
+
+            const itemRect = {
+                left: item.x,
+                right: item.x + 50,
+                top: item.y,
+                bottom: item.y + 50
+            };
+
+            if (charRect.left < itemRect.right &&
+                charRect.right > itemRect.left &&
+                charRect.top < itemRect.bottom &&
+                charRect.bottom > itemRect.top) {
+
+                const isItem = item.element.dataset.isItem === 'true';
+
+                // 아이템 처리
+                if (isItem) {
+                    const itemType = item.element.dataset.itemType;
+                    if (itemType === 'heart') {
+                        if (gameState.hearts < 3) {
+                            gameState.hearts++;
+                            showItemEffect('❤️ +1');
+                            updateHearts();
+                        }
+                    } else if (itemType === 'shield') {
+                        gameState.shield = 3;
+                        showItemEffect('🛡️ 보호막!');
+                    }
+                    item.element.style.background = 'rgba(0, 255, 0, 0.5)';
+                } else {
+                    const itemType = item.element.dataset.type;
+                    const letter = item.element.dataset.letter;
+                    const isDouble = item.element.dataset.isDouble === 'true';
+
+                    // 보스 기믹 체크
+                    const bossCheck = checkBossMechanic({
+                        type: itemType,
+                        letter: letter,
+                        isDouble: isDouble
+                    });
+
+                    // 일반 턴 체크
+                    const isCorrect = !gameState.bossActive && itemType === gameState.currentTurn;
+
+                    if (bossCheck || isCorrect) {
+                        gameState.score += 10;
+                        if (!gameState.bossActive) {
+                            gameState.itemsCaught++;
+                        }
+                        item.element.style.background = 'rgba(0, 255, 0, 0.5)';
+
+                        if (!gameState.bossActive && gameState.itemsCaught >= 5) {
+                            gameState.itemsCaught = 0;
+                            startTurnCountdown();
+                        }
+                    } else {
+                        // 실드가 있으면 실드 소모
+                        if (gameState.shield > 0) {
+                            gameState.shield--;
+                            showItemEffect('🛡️ -1');
+                        } else {
+                            gameState.hearts--;
+                            updateHearts();
+
+                            if (gameState.hearts <= 0) {
+                                gameOver();
+                            }
+                        }
+                        item.element.style.background = 'rgba(255, 0, 0, 0.5)';
+                    }
+                }
+
+                setTimeout(() => {
+                    item.element.remove();
+                }, 100);
+                gameState.fallingItems.splice(index, 1);
+                updateUI();
             }
-            for (let i = gameState.hearts; i < 3; i++) {
-                heartsElement.innerHTML += '<span class="heart" style="opacity: 0.3;">🖤</span>';
+
+            if (item.y > 460) {
+                item.element.remove();
+                gameState.fallingItems.splice(index, 1);
             }
+        });
+
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updateUI() {
+        scoreElement.textContent = gameState.score;
+    }
+
+    function updateHearts() {
+        heartsElement.innerHTML = '';
+        for (let i = 0; i < gameState.hearts; i++) {
+            heartsElement.innerHTML += '<span class="heart">❤️</span>';
+        }
+        for (let i = gameState.hearts; i < 3; i++) {
+            heartsElement.innerHTML += '<span class="heart" style="opacity: 0.3;">🖤</span>';
         }
 
-        function updateTurnIndicator() {
+        // 실드 표시
+        if (gameState.shield > 0) {
+            for (let i = 0; i < gameState.shield; i++) {
+                heartsElement.innerHTML += '<span class="heart">🛡️</span>';
+            }
+        }
+    }
+
+    function updateTurnIndicator() {
+        if (gameState.bossActive) {
+            updateBossProgress();
+        } else {
             turnIndicator.textContent = gameState.currentTurn === 'consonant' ? '자음 턴' : '모음 턴';
             turnIndicator.style.color = gameState.currentTurn === 'consonant' ? '#667eea' : '#f093fb';
         }
+    }
 
-        // 게임 오버
-        function gameOver() {
-            gameState.isRunning = false;
-            document.getElementById('finalScore').textContent = gameState.score;
-            gameOverScreen.style.display = 'flex';
+    function gameOver() {
+        gameState.isRunning = false;
+        document.getElementById('finalScore').textContent = gameState.score;
+        gameOverScreen.style.display = 'flex';
+        saveGameResult();
+    }
 
-            // 게임 결과 저장 (Spring API 호출)
-            saveGameResult();
+    // 게임 결과 저장 (Flutter로 전송)
+    function saveGameResult() {
+        let gameResult = 0;
+        if (gameState.score >= 500) {
+            gameResult = 2;
+        } else if (gameState.score >= 300) {
+            gameResult = 1;
         }
 
-        // 게임 결과 서버에 저장
-        async function saveGameResult() {
-            const gameResult = {
-                gameResult: gameState.score >= 100 ? 1 : 0, // 100점 이상이면 성공
-                gameScore: gameState.score,
-                gameNo: 1, // 한글받기 게임 번호
-                userNo: 1  // 실제로는 로그인한 사용자 번호를 사용
-            };
+        const gameData = {
+            gameNo: 1,
+            gameResult: gameResult,
+            gameScore: gameState.score
+        };
 
-            try {
-                // Spring Boot API 엔드포인트로 전송
-                // const response = await fetch('/api/game/save', {
-                //     method: 'POST',
-                //     headers: {
-                //         'Content-Type': 'application/json',
-                //     },
-                //     body: JSON.stringify(gameResult)
-                // });
+        console.log('게임 결과 전송:', gameData);
 
-                console.log('게임 결과 저장:', gameResult);
-                // alert('게임 결과가 저장되었습니다!');
-            } catch (error) {
-                console.error('게임 결과 저장 실패:', error);
-            }
+        if (window.FlutterChannel) {
+            window.FlutterChannel.postMessage(JSON.stringify(gameData));
         }
-    </script>
+    }
+</script>
 </body>
 
 </html>

@@ -1,15 +1,17 @@
+
+<!-- 개선해야할 거
+    1) 카테고리 선택 시, 초기화되지 않고 빠져나올 수 있는 X버튼 추가
+    2) 최종 단계 오브젝트 병합 시 사라지게 만들어서 무한모드 가능하게 하기
+    3) 드래그 시작 부분에서 오브젝트가 떨어짐. 드래그 놓을 때 떨어뜨리도록 변경
+    4) 오브젝트가 좌우로 나갈 수 있는 경계선 만들어야함
+    5) 오브젝트를 떨어뜨리자마자, 사용자가 들고 있는 오브젝트가 다음 오브젝트로 변경되어야함
+    6) 오브젝트 떨어뜨릴 때, 플레이어가 인지할 수 있도록 효과음 집어넣기
+    7) bgm
+    8) 지금 현재 쥐고 있는 오브젝트가 next로 표시됨. 그 다음 오브젝트를 next로 표시해야함
+-->
+
 <!DOCTYPE html>
 <html lang="ko">
-    <!-- 개선해야할 거 
-        1) 카테고리 선택 시, 초기화되지 않고 빠져나올 수 있는 X버튼 추가
-        2) 최종 단계 오브젝트 병합 시 사라지게 만들어서 무한모드 가능하게 하기
-        3) 드래그 시작 부분에서 오브젝트가 떨어짐. 드래그 놓을 때 떨어뜨리도록 변경
-        4) 오브젝트가 좌우로 나갈 수 있는 경계선 만들어야함
-        5) 오브젝트를 떨어뜨리자마자, 사용자가 들고 있는 오브젝트가 다음 오브젝트로 변경되어야함
-        6) 오브젝트 떨어뜨릴 때, 플레이어가 인지할 수 있도록 효과음 집어넣기
-        7) bgm
-        8) 지금 현재 쥐고 있는 오브젝트가 next로 표시됨. 그 다음 오브젝트를 next로 표시해야함
-    -->
 
 <head>
     <meta charset="UTF-8">
@@ -47,7 +49,6 @@
             flex-direction: column;
         }
 
-        /* 상단 UI 영역 */
         #topUI {
             position: relative;
             width: 100%;
@@ -122,65 +123,6 @@
             transform: scale(0.95);
         }
 
-        #evolutionBar {
-            background: white;
-            border: 3px solid #FFB84D;
-            border-radius: 15px;
-            padding: 10px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        #evolutionBar .label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #666;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-
-        #evolutionList {
-            display: flex;
-            justify-content: space-between;
-            gap: 3px;
-            overflow-x: auto;
-            padding: 5px 0;
-        }
-
-        .evolutionItem {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 28px;
-        }
-
-        .evolutionCircle {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            font-weight: bold;
-            color: white;
-            border: 2px solid #ddd;
-            margin-bottom: 3px;
-        }
-
-        .evolutionName {
-            font-size: 7px;
-            color: #666;
-            text-align: center;
-            line-height: 1.1;
-        }
-
-        /* 게임 영역 */
-        #gameArea {
-            position: relative;
-            flex: 1;
-            background: linear-gradient(to bottom, #E8F4F8 0%, #FFF9E6 50%, #F5DEB3 100%);
-        }
-
         #characters {
             position: absolute;
             top: 20px;
@@ -198,6 +140,12 @@
         .character>img {
             height: 80px;
             display: block;
+        }
+
+        #gameArea {
+            position: relative;
+            flex: 1;
+            background: linear-gradient(to bottom, #E8F4F8 0%, #FFF9E6 50%, #F5DEB3 100%);
         }
 
         #dropZone {
@@ -226,7 +174,6 @@
             background: transparent;
         }
 
-        /* 스킨 선택 모달 */
         #skinModal {
             position: absolute;
             top: 0;
@@ -250,6 +197,30 @@
             max-height: 80%;
             overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        /* X 버튼 추가 */
+        #closeModalX {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FF6B35;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        #closeModalX:active {
+            transform: scale(0.9);
         }
 
         #skinModalContent h2 {
@@ -314,7 +285,6 @@
             transform: scale(0.95);
         }
 
-        /* 게임 오버 */
         #gameOver {
             position: absolute;
             top: 0;
@@ -366,520 +336,525 @@
 </head>
 
 <body>
-    <div id="gameContainer">
-        <!-- 상단 UI 영역 -->
-        <div id="topUI">
-            <div id="scoreBoard">
-                <div id="score">점수: 0</div>
-                <div id="nextFruitBox">
-                    <div class="label">NEXT</div>
-                    <div id="nextFruitPreview"></div>
-                </div>
-            </div>
-            <div id="skinSelector">
-                <span>🎨</span>
-                <span id="currentSkinName">과일</span>
-            </div>
-            <div id="characters">
-                <div class="character">
-                    <img src="./water_melon_cut.png" alt="수박먹는토돌이와호순이" />
-                </div>
+<!-- BGM 오디오 -->
+<audio id="bgm" loop volume="0.3">
+    <source src="bgm.mp3" type="audio/mpeg">
+</audio>
+<!-- 드롭 효과음 -->
+<audio id="dropSound">
+    <source src="drop.mp3" type="audio/mpeg">
+</audio>
+
+<div id="gameContainer">
+    <div id="topUI">
+        <div id="scoreBoard">
+            <div id="score">점수: 0</div>
+            <div id="nextFruitBox">
+                <div class="label">NEXT</div>
+                <div id="nextFruitPreview"></div>
             </div>
         </div>
-
-        <!-- 게임 영역 -->
-        <div id="gameArea">
-            <div id="dropZone"></div>
-            <div id="nextFruit"></div>
-            <canvas id="gameCanvas"></canvas>
+        <div id="skinSelector">
+            <span>🎨</span>
+            <span id="currentSkinName">과일</span>
         </div>
-
-        <!-- 스킨 선택 모달 -->
-        <div id="skinModal">
-            <div id="skinModalContent">
-                <h2>카테고리 선택</h2>
-                <div class="skinOption selected" data-category="fruit">
-                    <div class="icon">🍎</div>
-                    <div class="name">과일</div>
-                </div>
-                <div class="skinOption" data-category="vehicle">
-                    <div class="icon">🚗</div>
-                    <div class="name">탈것</div>
-                </div>
-                <div class="skinOption" data-category="animal">
-                    <div class="icon">🐾</div>
-                    <div class="name">동물</div>
-                </div>
-                <div class="skinOption" data-category="nature">
-                    <div class="icon">🌱</div>
-                    <div class="name">식물/자연</div>
-                </div>
-                <div class="skinOption" data-category="tool">
-                    <div class="icon">⚙️</div>
-                    <div class="name">도구/문명</div>
-                </div>
-                <div class="skinOption" data-category="building">
-                    <div class="icon">🏠</div>
-                    <div class="name">건축물</div>
-                </div>
-                <button id="closeModal">확인</button>
-            </div>
-        </div>
-
-        <!-- 게임 오버 -->
-        <div id="gameOver">
-            <div id="gameOverContent">
-                <h2>게임 오버!</h2>
-                <p id="finalScore">최종 점수: 0</p>
-                <button id="restartBtn">다시 하기</button>
+        <div id="characters">
+            <div class="character">
+                <img src="./water_melon_cut.png" alt="수박먹는토돌이와호순이" />
             </div>
         </div>
     </div>
 
-    <script>
-        const categories = {
-            fruit: [
-                { name: '체리', color: '#ff6b6b', size: 25, shape: 'circle' },
-                { name: '귤', color: '#ffa500', size: 35, shape: 'circle' },
-                { name: '사과', color: '#ff4757', size: 45, shape: 'circle' },
-                { name: '배', color: '#ffd93d', size: 55, shape: 'circle' },
-                { name: '자몽', color: '#ffb8b8', size: 65, shape: 'circle' },
-                { name: '파인애플', color: '#f9ca24', size: 70, shape: 'pineapple' },
-                { name: '멜론', color: '#95e1d3', size: 75, shape: 'oval' },
-                { name: '망고', color: '#feca57', size: 100, shape: 'mango' },
-                { name: '용과', color: '#ff6348', size: 115, shape: 'oval' },
-                { name: '수박', color: '#38ada9', size: 150, shape: 'circle' },
-                { name: '과일바구니', color: '#cd84f1', size: 200, shape: 'basket' }
-            ],
-            vehicle: [
-                { name: '킥보드', color: '#74b9ff', size: 30, shape: 'kickboard' },
-                { name: '자전거', color: '#0984e3', size: 40, shape: 'bicycle' },
-                { name: '오토바이', color: '#6c5ce7', size: 50, shape: 'motorcycle' },
-                { name: '자동차', color: '#fd79a8', size: 60, shape: 'car' },
-                { name: '트럭', color: '#fdcb6e', size: 70, shape: 'truck' },
-                { name: '버스', color: '#f39c12', size: 80, shape: 'bus' },
-                { name: '기차', color: '#e17055', size: 90, shape: 'train' },
-                { name: '비행기', color: '#00b894', size: 95, shape: 'airplane' },
-                { name: '우주선', color: '#a29bfe', size: 105, shape: 'spaceship' },
-                { name: '로켓', color: '#e84393', size: 150, shape: 'rocket' },
-                { name: 'UFO', color: '#00cec9', size: 200, shape: 'ufo' }
-            ],
-            animal: [
-                { name: '개미', color: '#2d3436', size: 20, shape: 'circle' },
-                { name: '벌', color: '#feca57', size: 28, shape: 'circle' },
-                { name: '쥐', color: '#95afc0', size: 35, shape: 'circle' },
-                { name: '토끼', color: '#ffcccc', size: 45, shape: 'circle' },
-                { name: '여우', color: '#ff7675', size: 55, shape: 'circle' },
-                { name: '늑대', color: '#636e72', size: 65, shape: 'circle' },
-                { name: '곰', color: '#8b4513', size: 75, shape: 'circle' },
-                { name: '사자', color: '#f39c12', size: 85, shape: 'circle' },
-                { name: '코끼리', color: '#95a5a6', size: 95, shape: 'circle' },
-                { name: '고래', color: '#3498db', size: 150, shape: 'whale' },
-                { name: '용', color: '#9b59b6', size: 200, shape: 'dragon' }
-            ],
-            nature: [
-                { name: '새싹', color: '#b8e994', size: 25, shape: 'sprout' },
-                { name: '풀', color: '#78e08f', size: 30, shape: 'grass' },
-                { name: '꽃', color: '#ffb8b8', size: 40, shape: 'flower' },
-                { name: '관목', color: '#6ab04c', size: 50, shape: 'bush' },
-                { name: '나무', color: '#4a7c59', size: 60, shape: 'tree' },
-                { name: '숲', color: '#218c74', size: 75, shape: 'circle' },
-                { name: '정원', color: '#38ada9', size: 85, shape: 'circle' },
-                { name: '산', color: '#8395a7', size: 90, shape: 'mountain' },
-                { name: '밀림', color: '#05c46b', size: 95, shape: 'circle' },
-                { name: '대지', color: '#8b7355', size: 150, shape: 'circle' },
-                { name: '행성', color: '#4834df', size: 200, shape: 'circle' }
-            ],
-            tool: [
-                { name: '돌', color: '#95a5a6', size: 30, shape: 'stone' },
-                { name: '칼', color: '#bdc3c7', size: 35, shape: 'knife' },
-                { name: '망치', color: '#7f8c8d', size: 45, shape: 'hammer' },
-                { name: '활', color: '#d35400', size: 55, shape: 'bow' },
-                { name: '종이', color: '#ecf0f1', size: 50, shape: 'paper' },
-                { name: '대포', color: '#34495e', size: 65, shape: 'cannon' },
-                { name: '시계', color: '#f39c12', size: 70, shape: 'circle' },
-                { name: '전구', color: '#f1c40f', size: 80, shape: 'bulb' },
-                { name: '컴퓨터', color: '#3498db', size: 100, shape: 'computer' },
-                { name: '로봇', color: '#9b59b6', size: 150, shape: 'robot' },
-                { name: 'AI', color: '#e74c3c', size: 200, shape: 'circle' }
-            ],
-            building: [
-                { name: '텐트', color: '#f39c12', size: 35, shape: 'tent' },
-                { name: '오두막', color: '#d35400', size: 45, shape: 'hut' },
-                { name: '집', color: '#e74c3c', size: 55, shape: 'house' },
-                { name: '아파트', color: '#95a5a6', size: 70, shape: 'apartment' },
-                { name: '마을', color: '#3498db', size: 80, shape: 'circle' },
-                { name: '도시', color: '#2c3e50', size: 90, shape: 'circle' },
-                { name: '수도', color: '#34495e', size: 95, shape: 'circle' },
-                { name: '국가', color: '#16a085', size: 100, shape: 'circle' },
-                { name: '대륙', color: '#27ae60', size: 115, shape: 'circle' },
-                { name: '지구', color: '#2980b9', size: 150, shape: 'circle' },
-                { name: '우주정거장', color: '#8e44ad', size: 200, shape: 'station' }
-            ]
+    <div id="gameArea">
+        <div id="dropZone"></div>
+        <div id="nextFruit"></div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="skinModal">
+        <div id="skinModalContent">
+            <button id="closeModalX">×</button>
+            <h2>카테고리 선택</h2>
+            <div class="skinOption selected" data-category="fruit">
+                <div class="icon">🍎</div>
+                <div class="name">과일</div>
+            </div>
+            <div class="skinOption" data-category="vehicle">
+                <div class="icon">🚗</div>
+                <div class="name">탈것</div>
+            </div>
+            <div class="skinOption" data-category="animal">
+                <div class="icon">🐾</div>
+                <div class="name">동물</div>
+            </div>
+            <div class="skinOption" data-category="nature">
+                <div class="icon">🌱</div>
+                <div class="name">식물/자연</div>
+            </div>
+            <div class="skinOption" data-category="tool">
+                <div class="icon">⚙️</div>
+                <div class="name">도구/문명</div>
+            </div>
+            <div class="skinOption" data-category="building">
+                <div class="icon">🏠</div>
+                <div class="name">건축물</div>
+            </div>
+            <button id="closeModal">적용하기</button>
+        </div>
+    </div>
+
+    <div id="gameOver">
+        <div id="gameOverContent">
+            <h2>게임 오버!</h2>
+            <p id="finalScore">최종 점수: 0</p>
+            <button id="restartBtn">다시 하기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const categories = {
+        fruit: [
+            { name: '체리', color: '#ff6b6b', size: 25, shape: 'circle' },
+            { name: '귤', color: '#ffa500', size: 35, shape: 'circle' },
+            { name: '사과', color: '#ff4757', size: 45, shape: 'circle' },
+            { name: '배', color: '#ffd93d', size: 55, shape: 'circle' },
+            { name: '자몽', color: '#ffb8b8', size: 65, shape: 'circle' },
+            { name: '파인애플', color: '#f9ca24', size: 70, shape: 'pineapple' },
+            { name: '멜론', color: '#95e1d3', size: 75, shape: 'oval' },
+            { name: '망고', color: '#feca57', size: 100, shape: 'mango' },
+            { name: '용과', color: '#ff6348', size: 115, shape: 'oval' },
+            { name: '수박', color: '#38ada9', size: 150, shape: 'circle' },
+            { name: '과일바구니', color: '#cd84f1', size: 200, shape: 'basket' }
+        ],
+        vehicle: [
+            { name: '킥보드', color: '#74b9ff', size: 30, shape: 'kickboard' },
+            { name: '자전거', color: '#0984e3', size: 40, shape: 'bicycle' },
+            { name: '오토바이', color: '#6c5ce7', size: 50, shape: 'motorcycle' },
+            { name: '자동차', color: '#fd79a8', size: 60, shape: 'car' },
+            { name: '트럭', color: '#fdcb6e', size: 70, shape: 'truck' },
+            { name: '버스', color: '#f39c12', size: 80, shape: 'bus' },
+            { name: '기차', color: '#e17055', size: 90, shape: 'train' },
+            { name: '비행기', color: '#00b894', size: 95, shape: 'airplane' },
+            { name: '우주선', color: '#a29bfe', size: 105, shape: 'spaceship' },
+            { name: '로켓', color: '#e84393', size: 150, shape: 'rocket' },
+            { name: 'UFO', color: '#00cec9', size: 200, shape: 'ufo' }
+        ],
+        animal: [
+            { name: '개미', color: '#2d3436', size: 20, shape: 'circle' },
+            { name: '벌', color: '#feca57', size: 28, shape: 'circle' },
+            { name: '쥐', color: '#95afc0', size: 35, shape: 'circle' },
+            { name: '토끼', color: '#ffcccc', size: 45, shape: 'circle' },
+            { name: '여우', color: '#ff7675', size: 55, shape: 'circle' },
+            { name: '늑대', color: '#636e72', size: 65, shape: 'circle' },
+            { name: '곰', color: '#8b4513', size: 75, shape: 'circle' },
+            { name: '사자', color: '#f39c12', size: 85, shape: 'circle' },
+            { name: '코끼리', color: '#95a5a6', size: 95, shape: 'circle' },
+            { name: '고래', color: '#3498db', size: 150, shape: 'whale' },
+            { name: '용', color: '#9b59b6', size: 200, shape: 'dragon' }
+        ],
+        nature: [
+            { name: '새싹', color: '#b8e994', size: 25, shape: 'sprout' },
+            { name: '풀', color: '#78e08f', size: 30, shape: 'grass' },
+            { name: '꽃', color: '#ffb8b8', size: 40, shape: 'flower' },
+            { name: '관목', color: '#6ab04c', size: 50, shape: 'bush' },
+            { name: '나무', color: '#4a7c59', size: 60, shape: 'tree' },
+            { name: '숲', color: '#218c74', size: 75, shape: 'circle' },
+            { name: '정원', color: '#38ada9', size: 85, shape: 'circle' },
+            { name: '산', color: '#8395a7', size: 90, shape: 'mountain' },
+            { name: '밀림', color: '#05c46b', size: 95, shape: 'circle' },
+            { name: '대지', color: '#8b7355', size: 150, shape: 'circle' },
+            { name: '행성', color: '#4834df', size: 200, shape: 'circle' }
+        ],
+        tool: [
+            { name: '돌', color: '#95a5a6', size: 30, shape: 'stone' },
+            { name: '칼', color: '#bdc3c7', size: 35, shape: 'knife' },
+            { name: '망치', color: '#7f8c8d', size: 45, shape: 'hammer' },
+            { name: '활', color: '#d35400', size: 55, shape: 'bow' },
+            { name: '종이', color: '#ecf0f1', size: 50, shape: 'paper' },
+            { name: '대포', color: '#34495e', size: 65, shape: 'cannon' },
+            { name: '시계', color: '#f39c12', size: 70, shape: 'circle' },
+            { name: '전구', color: '#f1c40f', size: 80, shape: 'bulb' },
+            { name: '컴퓨터', color: '#3498db', size: 100, shape: 'computer' },
+            { name: '로봇', color: '#9b59b6', size: 150, shape: 'robot' },
+            { name: 'AI', color: '#e74c3c', size: 200, shape: 'circle' }
+        ],
+        building: [
+            { name: '텐트', color: '#f39c12', size: 35, shape: 'tent' },
+            { name: '오두막', color: '#d35400', size: 45, shape: 'hut' },
+            { name: '집', color: '#e74c3c', size: 55, shape: 'house' },
+            { name: '아파트', color: '#95a5a6', size: 70, shape: 'apartment' },
+            { name: '마을', color: '#3498db', size: 80, shape: 'circle' },
+            { name: '도시', color: '#2c3e50', size: 90, shape: 'circle' },
+            { name: '수도', color: '#34495e', size: 95, shape: 'circle' },
+            { name: '국가', color: '#16a085', size: 100, shape: 'circle' },
+            { name: '대륙', color: '#27ae60', size: 115, shape: 'circle' },
+            { name: '지구', color: '#2980b9', size: 150, shape: 'circle' },
+            { name: '우주정거장', color: '#8e44ad', size: 200, shape: 'station' }
+        ]
+    };
+
+    const { Engine, Render, Runner, Bodies, World, Events, Body } = Matter;
+
+    const canvas = document.getElementById('gameCanvas');
+    const gameArea = document.getElementById('gameArea');
+    const width = gameArea.clientWidth;
+    const height = gameArea.clientHeight;
+
+    const engine = Engine.create();
+    const world = engine.world;
+    world.gravity.y = 1;
+
+    const render = Render.create({
+        canvas: canvas,
+        engine: engine,
+        options: {
+            width: width,
+            height: height,
+            wireframes: false,
+            background: 'transparent'
+        }
+    });
+
+    Render.run(render);
+    const runner = Runner.create();
+    Runner.run(runner, engine);
+
+    const wallOptions = { isStatic: true, render: { fillStyle: '#dfe6e9' } };
+    const ground = Bodies.rectangle(width / 2, height - 10, width, 20, wallOptions);
+    const leftWall = Bodies.rectangle(10, height / 2, 20, height, wallOptions);
+    const rightWall = Bodies.rectangle(width - 10, height / 2, 20, height, wallOptions);
+
+    World.add(world, [ground, leftWall, rightWall]);
+
+    // 오디오 요소
+    const bgm = document.getElementById('bgm');
+    const dropSound = document.getElementById('dropSound');
+
+    let score = 0;
+    let currentCategory = 'fruit';
+    let currentFruitLevel = Math.floor(Math.random() * 5);
+    let nextFruitLevel = Math.floor(Math.random() * 5);
+    let canDrop = true;
+    let gameOverFlag = false;
+    let dropX = width / 2;
+    let isDragging = false;
+
+    // BGM 자동 재생 시도
+    document.addEventListener('click', () => {
+        if (bgm.paused) {
+            bgm.play().catch(e => console.log('BGM 재생 실패:', e));
+        }
+    }, { once: true });
+
+    function createBody(level, x, y) {
+        const fruit = categories[currentCategory][level];
+        let body;
+
+        switch (fruit.shape) {
+            case 'circle':
+                body = Bodies.circle(x, y, fruit.size / 2, {
+                    restitution: 0.3,
+                    friction: 0.5,
+                    density: 0.001
+                });
+                break;
+            case 'oval':
+                body = Bodies.circle(x, y, fruit.size / 2, {
+                    restitution: 0.3,
+                    friction: 0.5,
+                    density: 0.001
+                });
+                Body.scale(body, 1, 1.2);
+                break;
+            default:
+                body = Bodies.circle(x, y, fruit.size / 2, {
+                    restitution: 0.3,
+                    friction: 0.5,
+                    density: 0.001
+                });
+        }
+
+        body.render.fillStyle = fruit.color;
+        body.fruitLevel = level;
+        body.label = 'fruit';
+
+        return body;
+    }
+
+    function updateNextFruit() {
+        const nextFruitDiv = document.getElementById('nextFruit');
+        const nextFruitPreview = document.getElementById('nextFruitPreview');
+
+        // 현재 들고 있는 과일 표시
+        const currentFruit = categories[currentCategory][currentFruitLevel];
+        // 다음 과일 표시 (수정됨)
+        const nextFruit = categories[currentCategory][nextFruitLevel];
+
+        nextFruitDiv.innerHTML = `
+            <div style="
+                background: ${currentFruit.color};
+                border-radius: ${currentFruit.shape === 'circle' ? '50%' : '15px'};
+                width: ${currentFruit.size}px;
+                height: ${currentFruit.size}px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: ${currentFruit.size * 0.3}px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            ">${currentFruit.name}</div>
+        `;
+
+        nextFruitPreview.innerHTML = `
+            <div style="
+                background: ${nextFruit.color};
+                border-radius: 50%;
+                width: 35px;
+                height: 35px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: white;
+                font-size: 11px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            ">${nextFruit.name}</div>
+        `;
+    }
+
+    function dropFruit(x) {
+        if (!canDrop || gameOverFlag) return;
+
+        // 경계선 체크 (좌우로 못 나가게)
+        const fruit = categories[currentCategory][currentFruitLevel];
+        const minX = 30 + fruit.size / 2;
+        const maxX = width - 30 - fruit.size / 2;
+        x = Math.max(minX, Math.min(maxX, x));
+
+        canDrop = false;
+        const body = createBody(currentFruitLevel, x, 80);
+        World.add(world, body);
+
+        // 드롭 효과음 재생
+        dropSound.currentTime = 0;
+        dropSound.play().catch(e => console.log('효과음 재생 실패:', e));
+
+        // 즉시 다음 과일로 변경
+        currentFruitLevel = nextFruitLevel;
+        nextFruitLevel = Math.floor(Math.random() * 5);
+        updateNextFruit();
+
+        setTimeout(() => {
+            canDrop = true;
+        }, 500);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown' || e.key === 'Down') {
+            e.preventDefault();
+            dropFruit(dropX);
+        }
+    });
+
+    // 터치/마우스 드래그 개선
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        isDragging = true;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (isDragging) {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            dropX = touch.clientX - rect.left;
+
+            const nextFruitDiv = document.getElementById('nextFruit');
+            nextFruitDiv.style.left = dropX + 'px';
+            nextFruitDiv.style.transform = 'translateX(-50%)';
+        }
+    });
+
+    canvas.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (isDragging) {
+            dropFruit(dropX);
+            isDragging = false;
+        }
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDragging = true;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        dropX = e.clientX - rect.left;
+
+        const nextFruitDiv = document.getElementById('nextFruit');
+        nextFruitDiv.style.left = dropX + 'px';
+        nextFruitDiv.style.transform = 'translateX(-50%)';
+    });
+
+    canvas.addEventListener('mouseup', (e) => {
+        if (isDragging) {
+            const rect = canvas.getBoundingClientRect();
+            dropX = e.clientX - rect.left;
+            dropFruit(dropX);
+            isDragging = false;
+        }
+    });
+
+    Events.on(engine, 'collisionStart', (event) => {
+        event.pairs.forEach((pair) => {
+            const { bodyA, bodyB } = pair;
+
+            if (bodyA.label === 'fruit' && bodyB.label === 'fruit' &&
+                bodyA.fruitLevel === bodyB.fruitLevel &&
+                bodyA.fruitLevel < categories[currentCategory].length - 1) {
+
+                const level = bodyA.fruitLevel;
+                const x = (bodyA.position.x + bodyB.position.x) / 2;
+                const y = (bodyA.position.y + bodyB.position.y) / 2;
+
+                World.remove(world, [bodyA, bodyB]);
+
+                const newBody = createBody(level + 1, x, y);
+                World.add(world, newBody);
+
+                score += (level + 1) * 10;
+                document.getElementById('score').textContent = `점수: ${score}`;
+            } else if (bodyA.label === 'fruit' && bodyB.label === 'fruit' &&
+                       bodyA.fruitLevel === bodyB.fruitLevel &&
+                       bodyA.fruitLevel === categories[currentCategory].length - 1) {
+                // 최종 단계 병합 시 사라지게 (무한 모드)
+                World.remove(world, [bodyA, bodyB]);
+                score += 1000; // 보너스 점수
+                document.getElementById('score').textContent = `점수: ${score}`;
+            }
+        });
+    });
+
+    Events.on(engine, 'afterUpdate', () => {
+        const bodies = world.bodies.filter(b => b.label === 'fruit');
+        bodies.forEach(body => {
+            if (body.position.y < 80 && body.velocity.y < 0.1 && Math.abs(body.velocity.x) < 0.1) {
+                if (!gameOverFlag) {
+                    gameOverFlag = true;
+                    setTimeout(() => {
+                        document.getElementById('gameOver').style.display = 'flex';
+                        document.getElementById('finalScore').textContent = `최종 점수: ${score}`;
+                        saveGameResult();
+                    }, 500);
+                }
+            }
+        });
+    });
+
+    // 스킨 선택 모달
+    document.getElementById('skinSelector').addEventListener('click', () => {
+        document.getElementById('skinModal').style.display = 'flex';
+    });
+
+    // X 버튼으로 닫기 (초기화 없이)
+    document.getElementById('closeModalX').addEventListener('click', () => {
+        document.getElementById('skinModal').style.display = 'none';
+    });
+
+    // 적용하기 버튼 (재시작)
+    document.getElementById('closeModal').addEventListener('click', () => {
+        document.getElementById('skinModal').style.display = 'none';
+        restartGame();
+    });
+
+    document.querySelectorAll('.skinOption').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.skinOption').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+
+            const category = option.dataset.category;
+            const categoryNames = {
+                fruit: '과일',
+                vehicle: '탈것',
+                animal: '동물',
+                nature: '식물/자연',
+                tool: '도구/문명',
+                building: '건축물'
+            };
+
+            currentCategory = category;
+            document.getElementById('currentSkinName').textContent = categoryNames[category];
+        });
+    });
+
+    document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+    function restartGame() {
+        const bodies = world.bodies.filter(b => b.label === 'fruit');
+        World.remove(world, bodies);
+        score = 0;
+        gameOverFlag = false;
+        canDrop = true;
+        currentFruitLevel = Math.floor(Math.random() * 5);
+        nextFruitLevel = Math.floor(Math.random() * 5);
+        document.getElementById('score').textContent = '점수: 0';
+        document.getElementById('gameOver').style.display = 'none';
+        updateNextFruit();
+    }
+
+    Events.on(render, 'afterRender', () => {
+        const context = render.context;
+        const bodies = world.bodies.filter(b => b.label === 'fruit');
+
+        bodies.forEach(body => {
+            const fruit = categories[currentCategory][body.fruitLevel];
+            const pos = body.position;
+
+            context.save();
+            context.translate(pos.x, pos.y);
+            context.rotate(body.angle);
+
+            context.fillStyle = 'white';
+            context.strokeStyle = 'rgba(0,0,0,0.3)';
+            context.lineWidth = 2;
+            context.font = `bold ${fruit.size * 0.3}px Arial`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            context.strokeText(fruit.name, 0, 0);
+            context.fillText(fruit.name, 0, 0);
+
+            context.restore();
+        });
+    });
+
+    // 게임 결과 저장 (Flutter로 전송)
+    function saveGameResult() {
+        let gameResult = 0;
+        if (score >= 10000) {
+            gameResult = 2;
+        } else if (score >= 1000) {
+            gameResult = 1;
+        }
+
+        const gameData = {
+            gameNo: 2,
+            gameResult: gameResult,
+            gameScore: score
         };
 
-        const { Engine, Render, Runner, Bodies, World, Events, Body } = Matter;
+        console.log('게임 결과 전송:', gameData);
 
-        const canvas = document.getElementById('gameCanvas');
-        const gameArea = document.getElementById('gameArea');
-        const width = gameArea.clientWidth;
-        const height = gameArea.clientHeight;
-
-        const engine = Engine.create();
-        const world = engine.world;
-        world.gravity.y = 1;
-
-        const render = Render.create({
-            canvas: canvas,
-            engine: engine,
-            options: {
-                width: width,
-                height: height,
-                wireframes: false,
-                background: 'transparent'
-            }
-        });
-
-        Render.run(render);
-        const runner = Runner.create();
-        Runner.run(runner, engine);
-
-        // 벽 생성
-        const wallOptions = { isStatic: true, render: { fillStyle: '#dfe6e9' } };
-        const ground = Bodies.rectangle(width / 2, height - 10, width, 20, wallOptions);
-        const leftWall = Bodies.rectangle(10, height / 2, 20, height, wallOptions);
-        const rightWall = Bodies.rectangle(width - 10, height / 2, 20, height, wallOptions);
-
-        World.add(world, [ground, leftWall, rightWall]);
-
-        let score = 0;
-        let currentCategory = 'fruit';
-        let nextFruitLevel = Math.floor(Math.random() * 5);
-        let canDrop = true;
-        let gameOverFlag = false;
-        let dropX = width / 2;
-
-        function createBody(level, x, y) {
-            const fruit = categories[currentCategory][level];
-            let body;
-
-            switch (fruit.shape) {
-                case 'circle':
-                    body = Bodies.circle(x, y, fruit.size / 2, {
-                        restitution: 0.3,
-                        friction: 0.5,
-                        density: 0.001
-                    });
-                    break;
-                case 'oval':
-                    body = Bodies.circle(x, y, fruit.size / 2, {
-                        restitution: 0.3,
-                        friction: 0.5,
-                        density: 0.001
-                    });
-                    Body.scale(body, 1, 1.2);
-                    break;
-                case 'whale':
-                    body = Bodies.rectangle(x, y, fruit.size * 1.5, fruit.size * 0.6, {
-                        restitution: 0.2,
-                        friction: 0.5,
-                        density: 0.001,
-                        chamfer: { radius: fruit.size * 0.3 }
-                    });
-                    break;
-                case 'rocket':
-                case 'knife':
-                    body = Bodies.rectangle(x, y, fruit.size * 0.5, fruit.size * 1.3, {
-                        restitution: 0.3,
-                        friction: 0.5,
-                        density: 0.001,
-                        chamfer: { radius: [fruit.size * 0.25, fruit.size * 0.25, 0, 0] }
-                    });
-                    break;
-                case 'bus':
-                case 'truck':
-                case 'train':
-                    body = Bodies.rectangle(x, y, fruit.size * 1.3, fruit.size * 0.7, {
-                        restitution: 0.2,
-                        friction: 0.6,
-                        density: 0.001,
-                        chamfer: { radius: fruit.size * 0.1 }
-                    });
-                    break;
-                case 'airplane':
-                    body = Bodies.rectangle(x, y, fruit.size * 1.5, fruit.size * 0.5, {
-                        restitution: 0.3,
-                        friction: 0.4,
-                        density: 0.0008,
-                        chamfer: { radius: [fruit.size * 0.25, fruit.size * 0.25, 0, 0] }
-                    });
-                    break;
-                case 'mountain':
-                    const mountainVertices = [
-                        { x: -fruit.size * 0.6, y: fruit.size * 0.4 },
-                        { x: 0, y: -fruit.size * 0.5 },
-                        { x: fruit.size * 0.6, y: fruit.size * 0.4 }
-                    ];
-                    body = Bodies.fromVertices(x, y, mountainVertices, {
-                        restitution: 0.1,
-                        friction: 0.8,
-                        density: 0.001
-                    });
-                    break;
-                case 'house':
-                case 'apartment':
-                    body = Bodies.rectangle(x, y, fruit.size * 0.8, fruit.size * 1.1, {
-                        restitution: 0.1,
-                        friction: 0.7,
-                        density: 0.001,
-                        chamfer: { radius: fruit.size * 0.05 }
-                    });
-                    break;
-                default:
-                    body = Bodies.circle(x, y, fruit.size / 2, {
-                        restitution: 0.3,
-                        friction: 0.5,
-                        density: 0.001
-                    });
-            }
-
-            body.render.fillStyle = fruit.color;
-            body.fruitLevel = level;
-            body.label = 'fruit';
-
-            return body;
+        if (window.FlutterChannel) {
+            window.FlutterChannel.postMessage(JSON.stringify(gameData));
         }
+    }
 
-        function updateNextFruit() {
-            const nextFruitDiv = document.getElementById('nextFruit');
-            const nextFruitPreview = document.getElementById('nextFruitPreview');
-            const fruit = categories[currentCategory][nextFruitLevel];
-
-            // 메인 드롭 미리보기
-            nextFruitDiv.innerHTML = `
-                <div style="
-                    background: ${fruit.color};
-                    border-radius: ${fruit.shape === 'circle' ? '50%' : '15px'};
-                    width: ${fruit.size}px;
-                    height: ${fruit.size}px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: bold;
-                    color: white;
-                    font-size: ${fruit.size * 0.3}px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-                ">${fruit.name}</div>
-            `;
-
-            // 상단 NEXT 박스 미리보기
-            nextFruitPreview.innerHTML = `
-                <div style="
-                    background: ${fruit.color};
-                    border-radius: 50%;
-                    width: 35px;
-                    height: 35px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-weight: bold;
-                    color: white;
-                    font-size: 11px;
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                ">${fruit.name}</div>
-            `;
-        }
-
-        function updateEvolutionBar() {
-            const evolutionList = document.getElementById('evolutionList');
-            const items = categories[currentCategory];
-
-            evolutionList.innerHTML = items.map((item, index) => `
-                <div class="evolutionItem">
-                    <div class="evolutionCircle" style="background: ${item.color}; border-color: ${item.color};">
-                        ${index + 1}
-                    </div>
-                    <div class="evolutionName">${item.name}</div>
-                </div>
-            `).join('');
-        }
-
-        function dropFruit(x) {
-            if (!canDrop || gameOverFlag) return;
-
-            canDrop = false;
-            const body = createBody(nextFruitLevel, x, 80);
-            World.add(world, body);
-
-            setTimeout(() => {
-                canDrop = true;
-                nextFruitLevel = Math.floor(Math.random() * 5);
-                updateNextFruit();
-            }, 500);
-        }
-
-        // 키보드 이벤트 (방향키 하단으로 드롭)
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowDown' || e.key === 'Down') {
-                e.preventDefault();
-                dropFruit(dropX);
-            }
-        });
-
-        // 터치 및 마우스 이벤트
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            dropX = touch.clientX - rect.left;
-
-            const nextFruitDiv = document.getElementById('nextFruit');
-            nextFruitDiv.style.left = dropX + 'px';
-            nextFruitDiv.style.transform = 'translateX(-50%)';
-        });
-
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            dropX = touch.clientX - rect.left;
-            dropFruit(dropX);
-        });
-
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            dropX = e.clientX - rect.left;
-
-            const nextFruitDiv = document.getElementById('nextFruit');
-            nextFruitDiv.style.left = dropX + 'px';
-            nextFruitDiv.style.transform = 'translateX(-50%)';
-        });
-
-        canvas.addEventListener('click', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            dropX = e.clientX - rect.left;
-            dropFruit(dropX);
-        });
-
-        // 충돌 감지
-        Events.on(engine, 'collisionStart', (event) => {
-            event.pairs.forEach((pair) => {
-                const { bodyA, bodyB } = pair;
-
-                if (bodyA.label === 'fruit' && bodyB.label === 'fruit' &&
-                    bodyA.fruitLevel === bodyB.fruitLevel &&
-                    bodyA.fruitLevel < categories[currentCategory].length - 1) {
-
-                    const level = bodyA.fruitLevel;
-                    const x = (bodyA.position.x + bodyB.position.x) / 2;
-                    const y = (bodyA.position.y + bodyB.position.y) / 2;
-
-                    World.remove(world, [bodyA, bodyB]);
-
-                    const newBody = createBody(level + 1, x, y);
-                    World.add(world, newBody);
-
-                    score += (level + 1) * 10;
-                    document.getElementById('score').textContent = `점수: ${score}`;
-                }
-            });
-        });
-
-        // 게임 오버 체크
-        Events.on(engine, 'afterUpdate', () => {
-            const bodies = world.bodies.filter(b => b.label === 'fruit');
-            bodies.forEach(body => {
-                if (body.position.y < 80 && body.velocity.y < 0.1 && Math.abs(body.velocity.x) < 0.1) {
-                    if (!gameOverFlag) {
-                        gameOverFlag = true;
-                        setTimeout(() => {
-                            document.getElementById('gameOver').style.display = 'flex';
-                            document.getElementById('finalScore').textContent = `최종 점수: ${score}`;
-                        }, 500);
-                    }
-                }
-            });
-        });
-
-        // 스킨 모달 관련
-        document.getElementById('skinSelector').addEventListener('click', () => {
-            document.getElementById('skinModal').style.display = 'flex';
-        });
-
-        document.getElementById('closeModal').addEventListener('click', () => {
-            document.getElementById('skinModal').style.display = 'none';
-            restartGame();
-        });
-
-        document.querySelectorAll('.skinOption').forEach(option => {
-            option.addEventListener('click', () => {
-                document.querySelectorAll('.skinOption').forEach(o => o.classList.remove('selected'));
-                option.classList.add('selected');
-
-                const category = option.dataset.category;
-                const categoryNames = {
-                    fruit: '과일',
-                    vehicle: '탈것',
-                    animal: '동물',
-                    nature: '식물/자연',
-                    tool: '도구/문명',
-                    building: '건축물'
-                };
-
-                currentCategory = category;
-                document.getElementById('currentSkinName').textContent = categoryNames[category];
-                updateEvolutionBar();
-            });
-        });
-
-        // 재시작
-        document.getElementById('restartBtn').addEventListener('click', restartGame);
-
-        function restartGame() {
-            const bodies = world.bodies.filter(b => b.label === 'fruit');
-            World.remove(world, bodies);
-            score = 0;
-            gameOverFlag = false;
-            canDrop = true;
-            nextFruitLevel = Math.floor(Math.random() * 5);
-            document.getElementById('score').textContent = '점수: 0';
-            document.getElementById('gameOver').style.display = 'none';
-            updateNextFruit();
-            updateEvolutionBar();
-        }
-
-        // 오브젝트에 텍스트 렌더링
-        Events.on(render, 'afterRender', () => {
-            const context = render.context;
-            const bodies = world.bodies.filter(b => b.label === 'fruit');
-
-            bodies.forEach(body => {
-                const fruit = categories[currentCategory][body.fruitLevel];
-                const pos = body.position;
-
-                context.save();
-                context.translate(pos.x, pos.y);
-                context.rotate(body.angle);
-
-                context.fillStyle = 'white';
-                context.strokeStyle = 'rgba(0,0,0,0.3)';
-                context.lineWidth = 2;
-                context.font = `bold ${fruit.size * 0.3}px Arial`;
-                context.textAlign = 'center';
-                context.textBaseline = 'middle';
-
-                context.strokeText(fruit.name, 0, 0);
-                context.fillText(fruit.name, 0, 0);
-
-                context.restore();
-            });
-        });
-
-        // 초기화
-        updateNextFruit();
-        updateEvolutionBar();
-    </script>
+    updateNextFruit();
+</script>
 </body>
 
 </html>
