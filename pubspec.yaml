@@ -37,6 +37,7 @@ dependencies:
   shared_preferences: ^2.5.3 # 로컬 저장
   fluttertoast: ^9.0.0 # 토스트 메시지 지원
   web_socket_channel: ^2.4.0 # 웹소켓 채팅
+  intl_phone_field_v2: ^4.0.5 # 국제번호 드롭다운 // 웹은 국가 사진x
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
