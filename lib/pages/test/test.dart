@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:saykoreanapp_f/api.dart'; // ★ 전역 ApiClient 사용
+import 'package:saykoreanapp_f/api.dart'; // 전역 Dio: ApiClient.dio 사용
 
 class TestPage extends StatefulWidget {
   final int testNo;
@@ -15,80 +15,84 @@ class _TestPageState extends State<TestPage> {
   String msg = "";
   List<dynamic> items = [];
   int idx = 0;
-  bool submitting = false;
-  Map<String, dynamic>? feedback;
-  int? testRound;
-  int langNo = 1; // 기본값
-  String subjective = "";
 
+  bool submitting = false;
+  String subjective = "";
+  Map<String, dynamic>? feedback;
+
+  int? langNo;      // null 일 때는 아직 언어 안 정해진 상태
+  int? testRound;   // 회차
+
+  // ─────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
-    _loadLangAndTest();
+    _initLangAndQuestions();
   }
 
-  // 언어 로드 후 문항 로드
-  Future<void> _loadLangAndTest() async {
+  Future<void> _initLangAndQuestions() async {
+    // 1) 언어 로컬스토리지에서 읽기
     try {
       final prefs = await SharedPreferences.getInstance();
-      langNo = prefs.getInt('selectedLangNo') ?? 1;
-      print("TestPage init, testNo=${widget.testNo}, langNo=$langNo");
+      final stored = prefs.getInt('selectedLangNo');
+      final n = stored ?? 1;
+      setState(() => langNo = (n > 0) ? n : 1);
     } catch (e) {
-      print("_loadLangAndTest prefs error: $e");
-      langNo = 1;
+      print("langNo load error: $e");
+      setState(() => langNo = 1);
     }
+
+    // 2) 언어 설정 후 문항/회차 로드
     await _loadQuestions();
   }
 
   Future<void> _loadQuestions() async {
+    if (langNo == null) return;
+
     setState(() {
       loading = true;
       msg = "";
+      items = [];
+      idx = 0;
+      subjective = "";
+      feedback = null;
     });
 
     try {
-      // 1) 회차 조회
+      // [1] 다음 회차 조회
       final roundRes = await ApiClient.dio.get(
-        '/saykorean/test/getnextround',
-        queryParameters: {
-          "testNo": widget.testNo,
-        },
+        "/saykorean/test/getnextround",
+        queryParameters: {"testNo": widget.testNo},
       );
       print("▶ getnextround status = ${roundRes.statusCode}");
       print("▶ getnextround data   = ${roundRes.data}");
 
-      if (roundRes.data is int) {
-        testRound = roundRes.data as int;
-      } else if (roundRes.data is Map &&
-          (roundRes.data['testRound'] != null)) {
-        testRound = roundRes.data['testRound'] as int;
-      } else {
-        testRound = 1;
+      int nextRound = 1;
+      final data = roundRes.data;
+      if (data is int) {
+        nextRound = data;
+      } else if (data is Map && data['testRound'] is int) {
+        nextRound = data['testRound'] as int;
       }
+      setState(() => testRound = nextRound);
 
-      // 2) 문항 데이터 로드
+      // [2] 문항 목록 조회
       final res = await ApiClient.dio.get(
-        '/saykorean/test/findtestitem',
+        "/saykorean/test/findtestitem",
         queryParameters: {
           "testNo": widget.testNo,
           "langNo": langNo,
         },
       );
+
       print("▶ findtestitem status = ${res.statusCode}");
       print("▶ findtestitem data   = ${res.data}");
 
       List<dynamic> list;
       if (res.data is List) {
         list = res.data as List;
-      } else if (res.data is Map) {
-        final map = res.data as Map;
-        if (map['list'] is List) {
-          list = map['list'] as List;
-        } else if (map['items'] is List) {
-          list = map['items'] as List;
-        } else {
-          list = [];
-        }
+      } else if (res.data is Map && res.data['list'] is List) {
+        list = res.data['list'] as List;
       } else {
         list = [];
       }
@@ -110,10 +114,20 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
+  // 문자열 안전 체크 (null / 빈문자열 방지용)
+  String? _safeSrc(dynamic s) {
+    if (s is String && s.trim().isNotEmpty) return s;
+    return null;
+  }
+
+  // ─────────────────────────────────────────────────────────────
   Future<void> submitAnswer({int? selectedExamNo}) async {
-    if (testRound == null || items.isEmpty) return;
-    final cur = items[idx];
-    final isSubjective = idx % 3 == 2;
+    if (items.isEmpty) return;
+    if (testRound == null) return;
+
+    final cur = items[idx] as Map<String, dynamic>;
+    final questionType = idx % 3; // 0=그림객관식, 1=음성객관식, 2=주관식
+    final isSubjective = questionType == 2;
 
     final body = {
       "testRound": testRound,
@@ -125,11 +139,26 @@ class _TestPageState extends State<TestPage> {
     final url =
         "/saykorean/test/${widget.testNo}/items/${cur['testItemNo']}/answer";
 
+    // 주관식이면 로딩 페이지로 넘기기 (React와 동일 로직)
     if (isSubjective && selectedExamNo == null) {
-      print("로딩 페이지로 이동 (주관식)");
+      print("주관식 → 로딩 페이지로 이동");
+      if (!mounted) return;
+      Navigator.pushNamed(
+        context,
+        "/loading",
+        arguments: {
+          "action": "submitAnswer",
+          "payload": {
+            "testNo": widget.testNo,
+            "url": url,
+            "body": body,
+          },
+        },
+      );
       return;
     }
 
+    // 객관식은 바로 제출
     try {
       setState(() => submitting = true);
       final res = await ApiClient.dio.post(url, data: body);
@@ -137,12 +166,12 @@ class _TestPageState extends State<TestPage> {
       print("▶ submitAnswer data   = ${res.data}");
 
       final data = res.data;
+      num rawScore = 0;
+      dynamic rawCorrect;
 
-      // 여러 가지 응답 형태를 다 커버
-      dynamic rawCorrect = 0;
       if (data is Map) {
-        rawCorrect =
-            data["isCorrect"] ?? data["correct"] ?? data["result"] ?? 0;
+        rawScore = (data["score"] is num) ? data["score"] as num : 0;
+        rawCorrect = data["isCorrect"] ?? data["correct"] ?? data["result"];
       }
 
       bool isCorrect;
@@ -151,19 +180,16 @@ class _TestPageState extends State<TestPage> {
       } else if (rawCorrect is num) {
         isCorrect = rawCorrect == 1;
       } else if (rawCorrect is String) {
-        isCorrect = (rawCorrect == "1" || rawCorrect.toLowerCase() == "true");
+        isCorrect = (rawCorrect == "1" ||
+            rawCorrect.toLowerCase() == "true");
       } else {
         isCorrect = false;
       }
 
-      final score = (data is Map && data["score"] is num)
-          ? (data["score"] as num).toInt()
-          : 0;
-
       setState(() {
         feedback = {
           "correct": isCorrect,
-          "score": score,
+          "score": rawScore.toInt(),
         };
       });
     } catch (e, st) {
@@ -193,18 +219,28 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
-  // ──────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     const cream = Color(0xFFFFF9F0);
     const brown = Color(0xFF6B4E42);
     final screenWidth = MediaQuery.of(context).size.width;
 
-    final cur = (items.isNotEmpty) ? items[idx] : null;
-    final questionType = idx % 3; // 0=그림,1=음성,2=주관식
+    final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
+
+    // 문항 타입: 0=그림 객관식, 1=음성 객관식, 2=주관식
+    final questionType = idx % 3;
     final isImageQuestion = questionType == 0;
     final isAudioQuestion = questionType == 1;
     final isSubjective = questionType == 2;
+    final isMultiple = !isSubjective;
+
+    final hasImage = _safeSrc(cur?['imagePath']) != null;
+    final hasAudio = cur?['audios'] is List &&
+        (cur!['audios'] as List).isNotEmpty;
+
+    print("🔍 문항 타입: idx=$idx, type=$questionType, "
+        "image=$hasImage, audio=$hasAudio, subj=$isSubjective");
 
     return Scaffold(
       backgroundColor: cream,
@@ -235,9 +271,10 @@ class _TestPageState extends State<TestPage> {
           padding:
           const EdgeInsets.fromLTRB(20, 10, 20, 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+            CrossAxisAlignment.stretch,
             children: [
-              // 상단 타이틀 영역
+              // 상단 타이틀
               const Text(
                 "오늘의 시험",
                 style: TextStyle(
@@ -275,12 +312,15 @@ class _TestPageState extends State<TestPage> {
                   border: Border.all(
                     color: const Color(0xFFE5E7EB),
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius:
+                  BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.brown.withOpacity(0.06),
+                      color: Colors.brown
+                          .withOpacity(0.06),
                       blurRadius: 10,
-                      offset: const Offset(0, 5),
+                      offset:
+                      const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -288,7 +328,7 @@ class _TestPageState extends State<TestPage> {
                   crossAxisAlignment:
                   CrossAxisAlignment.center,
                   children: [
-                    // 문제 텍스트
+                    // 질문 텍스트
                     Text(
                       cur?['questionSelected'] ?? "",
                       style: const TextStyle(
@@ -299,77 +339,100 @@ class _TestPageState extends State<TestPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // 이미지 문항
-                    if (isImageQuestion &&
-                        cur?['imagePath'] != null)
+                    // 🖼️ 그림 (1, 4, 7 ... 번째)
+                    if (isImageQuestion && hasImage)
                       ClipRRect(
                         borderRadius:
-                        BorderRadius.circular(12),
+                        BorderRadius.circular(
+                            12),
                         child: SizedBox(
-                          width: screenWidth * 0.8,
+                          width:
+                          screenWidth * 0.8,
                           child: AspectRatio(
                             aspectRatio: 3 / 3,
                             child: Image.network(
                               ApiClient.buildUrl(
-                                cur!['imagePath'] as String,
+                                _safeSrc(cur![
+                                'imagePath'])!,
                               ),
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) =>
+                              errorBuilder: (_,
+                                  __,
+                                  ___) =>
                               const Center(
-                                child:
-                                Text('이미지를 불러올 수 없어요'),
+                                child: Text(
+                                    '이미지를 불러올 수 없어요'),
                               ),
                             ),
                           ),
                         ),
                       ),
 
-                    // 오디오 문항
+                    // 🎵 오디오 (2, 5, 8 ... 번째)
                     if (isAudioQuestion &&
-                        cur?['audios'] != null)
+                        hasAudio)
                       Column(
                         children: [
                           for (final audio
-                          in (cur!['audios'] as List))
-                            Padding(
-                              padding:
-                              const EdgeInsets.symmetric(
-                                  vertical: 6.0),
-                              child: OutlinedButton(
-                                onPressed: () {
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor:
-                                  const Color(0xFF6B4E42),
-                                  side: const BorderSide(
-                                    color:
-                                    Color(0xFFE5D5CC),
+                          in (cur!['audios']
+                          as List))
+                            if (_safeSrc(audio[
+                            'audioPath']) !=
+                                null)
+                              Padding(
+                                padding:
+                                const EdgeInsets
+                                    .symmetric(
+                                    vertical:
+                                    6.0),
+                                child:
+                                OutlinedButton(
+                                  onPressed: () {
+                                    // 필요하면 오디오 플레이 로직
+                                  },
+                                  style: OutlinedButton
+                                      .styleFrom(
+                                    foregroundColor:
+                                    brown,
+                                    side:
+                                    const BorderSide(
+                                      color: Color(
+                                          0xFFE5D5CC),
+                                    ),
                                   ),
+                                  child: Text(
+                                      "🔊 ${audio['audioPath']}"),
                                 ),
-                                child: Text(
-                                    "🔊 ${audio['audioPath']}"),
-                              ),
-                            )
+                              )
                         ],
                       ),
 
-                    // 주관식 예문
+                    // 📝 주관식 예문 (3, 6, 9 ... 번째)
                     if (isSubjective &&
-                        cur?['examSelected'] != null)
+                        cur?['examSelected'] !=
+                            null)
                       Container(
                         margin:
-                        const EdgeInsets.only(top: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF9FAFB),
+                        const EdgeInsets.only(
+                            top: 10),
+                        padding:
+                        const EdgeInsets.all(
+                            12),
+                        decoration:
+                        BoxDecoration(
+                          color: const Color(
+                              0xFFF9FAFB),
                           borderRadius:
-                          BorderRadius.circular(10),
+                          BorderRadius
+                              .circular(10),
                         ),
                         child: Text(
                           cur!['examSelected'],
-                          style: const TextStyle(
+                          style:
+                          const TextStyle(
                             fontSize: 15,
-                            color: Color(0xFF4B5563),
+                            color:
+                            Color(0xFF4B5563),
                           ),
                         ),
                       ),
@@ -379,134 +442,76 @@ class _TestPageState extends State<TestPage> {
 
               const SizedBox(height: 20),
 
-              // 선택지 / 입력 영역
-              if (!isSubjective)
-                Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      "정답을 골라보세요",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF7C5A48),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if ((cur?['options'] as List?)?.isNotEmpty ??
-                        false)
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: (cur!['options'] as List)
-                            .map<Widget>((opt) {
-                          final label =
-                              opt['examSelected'] ??
-                                  opt['examKo'] ??
-                                  "보기 로드 실패";
-                          return _ChoiceButton(
-                            label: label.toString(),
-                            onTap: feedback == null
-                                ? () => submitAnswer(
-                                selectedExamNo:
-                                opt['examNo'])
-                                : null,
-                          );
-                        }).toList(),
-                      )
-                    else
-                      const Text("보기 불러오기 실패"),
-                  ],
-                )
+              // 객관식 / 주관식 영역
+              if (isMultiple)
+                _buildMultipleChoice(cur)
               else
-                Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.stretch,
-                  children: [
-                    const Text(
-                      "한국어로 답을 입력해 보세요",
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF7C5A48),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      enabled: feedback == null,
-                      minLines: 3,
-                      maxLines: 4,
-                      onChanged: (v) => subjective = v,
-                      decoration: const InputDecoration(
-                        hintText: "한국어로 답변을 작성하세요",
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 44,
-                      child: ElevatedButton(
-                        onPressed: (subjective.trim().isEmpty ||
-                            submitting)
-                            ? null
-                            : () => submitAnswer(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                          const Color(0xFFFFEEE9),
-                          foregroundColor: brown,
-                          elevation: 0,
-                        ),
-                        child: Text(
-                            submitting ? "로딩 중..." : "제출"),
-                      ),
-                    ),
-                  ],
-                ),
+                _buildSubjective(),
 
               const SizedBox(height: 20),
 
-              // 결과/피드백 + 다음 버튼
+              // 피드백 + 다음 버튼
               if (feedback != null)
                 Column(
                   crossAxisAlignment:
-                  CrossAxisAlignment.stretch,
+                  CrossAxisAlignment
+                      .stretch,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: feedback!['correct']
-                            ? Colors.green.shade100
-                            : Colors.red.shade100,
+                      padding:
+                      const EdgeInsets
+                          .all(14),
+                      decoration:
+                      BoxDecoration(
+                        color: feedback![
+                        'correct']
+                            ? Colors.green
+                            .shade100
+                            : Colors.red
+                            .shade100,
                         borderRadius:
-                        BorderRadius.circular(12),
+                        BorderRadius
+                            .circular(12),
                       ),
                       child: Text(
                         feedback!['correct']
                             ? "정답입니다!"
                             : "틀렸어요 😢",
                         style: TextStyle(
-                          color: feedback!['correct']
-                              ? Colors.green.shade900
-                              : Colors.red.shade900,
-                          fontWeight: FontWeight.bold,
+                          color: feedback![
+                          'correct']
+                              ? Colors.green
+                              .shade900
+                              : Colors.red
+                              .shade900,
+                          fontWeight:
+                          FontWeight.bold,
                         ),
-                        textAlign: TextAlign.center,
+                        textAlign:
+                        TextAlign.center,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(
+                        height: 10),
                     SizedBox(
                       height: 48,
-                      child: ElevatedButton(
-                        onPressed: goNext,
-                        style: ElevatedButton.styleFrom(
+                      child:
+                      ElevatedButton(
+                        onPressed:
+                        goNext,
+                        style: ElevatedButton
+                            .styleFrom(
                           backgroundColor:
-                          const Color(0xFFFFEEE9),
-                          foregroundColor: brown,
+                          const Color(
+                              0xFFFFEEE9),
+                          foregroundColor:
+                          brown,
                           elevation: 0,
                         ),
                         child: Text(
-                          idx < items.length - 1
+                          idx <
+                              items.length -
+                                  1
                               ? "다음 문제"
                               : "결과 보기",
                         ),
@@ -520,9 +525,107 @@ class _TestPageState extends State<TestPage> {
       ),
     );
   }
+
+  // ─────────────────────────────────────────────────────────────
+  Widget _buildMultipleChoice(Map<String, dynamic>? cur) {
+    const titleColor = Color(0xFF7C5A48);
+
+    final options = cur?['options'];
+    final hasOptions =
+        options is List && options.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          "정답을 골라보세요",
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: titleColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (hasOptions)
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: (options as List).map<Widget>((opt) {
+              final map = opt as Map<String, dynamic>;
+              final label = map['examSelected'] ??
+                  map['examKo'] ??
+                  "보기 로드 실패";
+              return _ChoiceButton(
+                label: label.toString(),
+                onTap: feedback == null
+                    ? () => submitAnswer(
+                  selectedExamNo:
+                  map['examNo'] as int?,
+                )
+                    : null,
+              );
+            }).toList(),
+          )
+        else
+          const Text("보기 불러오기 실패"),
+      ],
+    );
+  }
+
+  Widget _buildSubjective() {
+    const titleColor = Color(0xFF7C5A48);
+    const brown = Color(0xFF6B4E42);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Text(
+          "한국어로 답을 입력해 보세요",
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: titleColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          enabled: feedback == null,
+          minLines: 3,
+          maxLines: 4,
+          onChanged: (v) {
+            setState(() {
+              subjective = v;
+            });
+          },
+          decoration: const InputDecoration(
+            hintText: "한국어로 답변을 작성하세요",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 44,
+          child: ElevatedButton(
+            onPressed: (subjective.trim().isEmpty ||
+                submitting)
+                ? null
+                : () => submitAnswer(),
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+              const Color(0xFFFFEEE9),
+              foregroundColor: brown,
+              elevation: 0,
+            ),
+            child: Text(
+                submitting ? "로딩 중..." : "제출"),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-// 선택지 pill 버튼 (StudyPage _PillButton 느낌)
+// 선택지 pill 버튼
 class _ChoiceButton extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
@@ -540,8 +643,8 @@ class _ChoiceButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding:
-        const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        padding: const EdgeInsets.symmetric(
+            vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border.all(color: borderColor),
