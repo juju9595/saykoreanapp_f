@@ -1,11 +1,15 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 import 'package:saykoreanapp_f/pages/auth/find_page.dart';
 import 'package:saykoreanapp_f/pages/auth/signup_page.dart';
 import 'package:saykoreanapp_f/pages/home/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api.dart';
+
+import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
+import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
 
 // 은주
 import 'dart:convert';
@@ -20,6 +24,7 @@ Map<String, dynamic> _decodeJwt(String token) {
 //------------------------------------------------------
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
   State<StatefulWidget> createState() {
@@ -130,8 +135,7 @@ class _LoginState extends State<LoginPage>{
             TextButton(onPressed: () =>
             {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => SignupPage() )
-              )
+                  MaterialPageRoute(builder: (context) => SignupPage())),
             }, child: Text("회원가입") ),
 
             SizedBox( height: 20,),

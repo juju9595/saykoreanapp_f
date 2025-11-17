@@ -1,16 +1,21 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl_phone_field_v2/intl_phone_field.dart';
+import 'package:intl_phone_field_v2/phone_number.dart';
+import 'package:recaptcha_enterprise_flutter/recaptcha_action.dart';
+import 'package:saykoreanapp_f/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 
+import 'package:saykoreanapp_f/utils/recaptcha_manager.dart';
+
 class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _SignupState();
   }
 }
-
-
 
 class _SignupState extends State<SignupPage> {
   // * 입력 컨트롤러, 각 입력창에서 입력받은 값을 제어
@@ -20,31 +25,46 @@ class _SignupState extends State<SignupPage> {
   TextEditingController nickNameCon = TextEditingController();
   TextEditingController phoneCon = TextEditingController();
 
+  // 서버 전송용 국제번호 저장 변수
+  PhoneNumber? emailPhoneNumber;
+
   // * 등록 버튼 클릭 시
   void onSignup() async {
-    // 1. 자바에게 보낼 데이터 준비
+    // 1. reCAPTCHA 토큰 요청 (Signup 액션)
+    String recaptchaToken = '';
+    try {
+      // 봇이 아닌지 확인하기 위한 토큰 실행 (Execution)
+      recaptchaToken = await RecaptchaManager.client.execute(RecaptchaAction.SIGNUP());
+      print('reCAPTCHA Token successfully generated: $recaptchaToken');
+    } catch (e) {
+      // 토큰 생성 실패 시 (네트워크 오류, SDK 초기화 실패 등)
+      Navigator.pop(context); // 로딩 닫기
+      Fluttertoast.showToast(msg: "보안 검증 실패. 다시 시도해 주세요.", backgroundColor: Colors.red);
+      print('reCAPTCHA execution error: $e');
+      return; // 회원가입 진행을 중단
+    }
+
+    // 2. 자바에게 보낼 데이터 준비
+    final plusPhone = emailPhoneNumber?.completeNumber ?? phoneCon.text;
+
     final sendData = {
       'name': nameCon.text,
       'email': emailCon.text,
       'password': passwordCon.text,
       'nickName': nickNameCon.text,
-      'phone': phoneCon.text,
-      //'recaptcha' : captchaValue
+      'phone': plusPhone,
+      'recaptchaToken':recaptchaToken,
     };
     print(sendData);
-
     // * Rest API 통신 간의 로딩 화면 표시, showDialog() : 팝업 창 띄우기 위한 위젯
     showDialog(
       context: context,
       builder: (context) => Center(child: CircularProgressIndicator(),),
       barrierDismissible: false, // 팝업창(로딩화면) 외 바깥 클릭 차단
     );
-
-    // 2.
     try {
-      Dio dio = Dio();
-      final response = await dio.post(
-          "http://192.168.40.22:8080/saykorean/signup", data: sendData);
+      final response = await ApiClient.dio.post(
+          "/saykorean/signup", data: sendData);
       final data = response.data;
 
       Navigator.pop(context); // 가장 앞(가장 최근에 열린)에 있는 위젯 닫기 (showDialog(): 팝업 창)
@@ -115,12 +135,24 @@ class _SignupState extends State<SignupPage> {
                     labelText: "닉네임", border: OutlineInputBorder()),
               ), // 입력 위젯, 닉네임
               SizedBox(height: 20,),
-              TextField(
+              IntlPhoneField(
                 controller: phoneCon,
                 decoration: InputDecoration(
-                    labelText: "전화번호", border: OutlineInputBorder()),
-              ), // 입력 위젯, 전화번호
+                  labelText: '전화번호',
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(),
+                  ),
+                ),
+                initialCountryCode: 'KR',
+                autovalidateMode: AutovalidateMode.disabled,
+                validator: (value) => null, // 자리수 검증 제거// ,
+                onChanged: (phone) {
+                  emailPhoneNumber = phone;
+                  print("입력한 번호: ${phone.number}");
+                }, // 입력 위젯, 전화번호
+              ),
               SizedBox(height: 20,),
+
               ElevatedButton(onPressed: onSignup, child: Text("회원가입")),
               SizedBox(height: 20,),
               TextButton(onPressed: () =>
@@ -129,7 +161,7 @@ class _SignupState extends State<SignupPage> {
                     context,
                     MaterialPageRoute(builder: (context) => LoginPage())
                 )
-              }, child: Text("이미 가입된 사용자 이면 _로그인"))
+              }, child: Text("이미 가입된 사용자면 로그인"))
             ],
           ),
         )
