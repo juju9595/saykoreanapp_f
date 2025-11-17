@@ -31,7 +31,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            position: fixed; /* 스크롤 방지 */
+            position: fixed;
         }
 
         body {
@@ -44,7 +44,9 @@
 
         #gameContainer {
             width: 100%;
-             /* 높이를 vh 대신 고정값으로 변경 */
+            max-width: 400px;
+            height: 800px;
+            max-height: 100vh;
             background: #FFF9E6;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -58,50 +60,51 @@
             position: relative;
             width: 100%;
             background: linear-gradient(to bottom, #FFE5B4 0%, #FFF9E6 100%);
-            padding: 15px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 8px 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            flex-shrink: 0;
         }
 
         #scoreBoard {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
 
         #score {
             background: white;
-            border: 3px solid #FFB84D;
-            border-radius: 20px;
-            padding: 8px 20px;
-            font-size: 20px;
+            border: 2px solid #FFB84D;
+            border-radius: 15px;
+            padding: 6px 15px;
+            font-size: 16px;
             font-weight: bold;
             color: #FF6B35;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         #nextFruitBox {
             background: white;
-            border: 3px solid #FFB84D;
-            border-radius: 20px;
-            padding: 10px;
+            border: 2px solid #FFB84D;
+            border-radius: 15px;
+            padding: 6px 8px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         #nextFruitBox .label {
-            font-size: 12px;
+            font-size: 10px;
             font-weight: bold;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         #nextFruitPreview {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -109,48 +112,30 @@
 
         #skinSelector {
             background: white;
-            border: 3px solid #FFB84D;
-            border-radius: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
+            border: 2px solid #FFB84D;
+            border-radius: 15px;
+            padding: 6px 15px;
+            font-size: 14px;
             font-weight: bold;
             color: #FF6B35;
             cursor: pointer;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
+            gap: 6px;
         }
 
         #skinSelector:active {
             transform: scale(0.95);
         }
 
-        #characters {
-            position: absolute;
-            top: 20px;
-            width: 100%;
-            display: flex;
-            padding-left: 130px;
-            pointer-events: none;
-            z-index: 100;
-        }
-
-        .character {
-            padding: 5px;
-        }
-
-        .character>img {
-            height: 80px;
-            display: block;
-        }
-
         #gameArea {
             position: relative;
             flex: 1;
+            min-height: 0;
             background: linear-gradient(to bottom, #E8F4F8 0%, #FFF9E6 50%, #F5DEB3 100%);
+            overflow: hidden;
         }
 
         #dropZone {
@@ -158,15 +143,15 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 60px;
+            height: 50px;
             background: rgba(255, 184, 77, 0.15);
-            border-bottom: 3px dashed #FFB84D;
+            border-bottom: 2px dashed #FFB84D;
             z-index: 50;
         }
 
         #nextFruit {
             position: absolute;
-            top: 20px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 600;
@@ -177,6 +162,7 @@
             width: 100%;
             height: 100%;
             background: transparent;
+            display: block;
         }
 
         #skinModal {
@@ -196,27 +182,26 @@
             background: linear-gradient(to bottom, #FFF9E6, #FFE5B4);
             border: 4px solid #FFB84D;
             border-radius: 25px;
-            padding: 30px 20px;
-            max-width: 320px;
-            width: 90%;
-            max-height: 80%;
+            padding: 25px 15px;
+            max-width: 300px;
+            width: 85%;
+            max-height: 75%;
             overflow-y: auto;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
             position: relative;
         }
 
-        /* X 버튼 추가 */
         #closeModalX {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 8px;
+            right: 8px;
             background: #FF6B35;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            font-size: 18px;
+            width: 28px;
+            height: 28px;
+            font-size: 16px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -231,43 +216,43 @@
         #skinModalContent h2 {
             text-align: center;
             color: #FF6B35;
-            font-size: 28px;
-            margin-bottom: 20px;
+            font-size: 24px;
+            margin-bottom: 15px;
             text-shadow: 2px 2px 0px #FFB84D;
         }
 
         .skinOption {
             background: white;
-            border: 3px solid #FFB84D;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 10px;
+            border: 2px solid #FFB84D;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             transition: all 0.2s;
         }
 
         .skinOption:hover {
             transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .skinOption.selected {
             background: #FFF4E0;
             border-color: #FF6B35;
-            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.3);
+            box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.3);
         }
 
         .skinOption .icon {
-            font-size: 32px;
-            min-width: 40px;
+            font-size: 28px;
+            min-width: 35px;
             text-align: center;
         }
 
         .skinOption .name {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
         }
@@ -276,14 +261,14 @@
             background: #FF6B35;
             color: white;
             border: none;
-            border-radius: 15px;
-            padding: 12px;
+            border-radius: 12px;
+            padding: 10px;
             width: 100%;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
-            margin-top: 15px;
+            margin-top: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+            box-shadow: 0 3px 12px rgba(255, 107, 53, 0.3);
         }
 
         #closeModal:active {
@@ -296,7 +281,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
@@ -305,21 +290,22 @@
 
         #gameOverContent {
             background: white;
-            padding: 40px;
+            padding: 35px 30px;
             border-radius: 20px;
             text-align: center;
+            max-width: 300px;
         }
 
         #gameOverContent h2 {
-            font-size: 36px;
+            font-size: 32px;
             color: #FF6B35;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         #gameOverContent p {
-            font-size: 24px;
+            font-size: 20px;
             color: #333;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         #restartBtn {
@@ -327,8 +313,8 @@
             color: white;
             border: none;
             border-radius: 15px;
-            padding: 15px 40px;
-            font-size: 20px;
+            padding: 12px 35px;
+            font-size: 18px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
@@ -337,15 +323,33 @@
         #restartBtn:active {
             transform: scale(0.95);
         }
+
+        #characters {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            display: flex;
+            padding-left: 170px;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .character {
+            padding: 5px;
+        }
+
+        .character>img {
+            height: 50px;
+            display: block;
+        }
+
     </style>
 </head>
 
 <body>
-<!-- BGM 오디오 -->
 <audio id="bgm" loop volume="0.3">
     <source src="bgm.mp3" type="audio/mpeg">
 </audio>
-<!-- 드롭 효과음 -->
 <audio id="dropSound">
     <source src="drop.mp3" type="audio/mpeg">
 </audio>
@@ -503,36 +507,45 @@
 
     const canvas = document.getElementById('gameCanvas');
     const gameArea = document.getElementById('gameArea');
-    const width = gameArea.clientWidth;
-    const height = gameArea.clientHeight;
 
-    const engine = Engine.create();
-    const world = engine.world;
-    world.gravity.y = 1;
+    // 실제 렌더링되는 크기 계산
+    function initGame() {
+        const rect = gameArea.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
 
-    const render = Render.create({
-        canvas: canvas,
-        engine: engine,
-        options: {
-            width: width,
-            height: height,
-            wireframes: false,
-            background: 'transparent'
-        }
-    });
+        const engine = Engine.create();
+        const world = engine.world;
+        world.gravity.y = 1;
 
-    Render.run(render);
-    const runner = Runner.create();
-    Runner.run(runner, engine);
+        const render = Render.create({
+            canvas: canvas,
+            engine: engine,
+            options: {
+                width: width,
+                height: height,
+                wireframes: false,
+                background: 'transparent'
+            }
+        });
 
-    const wallOptions = { isStatic: true, render: { fillStyle: '#dfe6e9' } };
-    const ground = Bodies.rectangle(width / 2, height - 10, width, 20, wallOptions);
-    const leftWall = Bodies.rectangle(10, height / 2, 20, height, wallOptions);
-    const rightWall = Bodies.rectangle(width - 10, height / 2, 20, height, wallOptions);
+        Render.run(render);
+        const runner = Runner.create();
+        Runner.run(runner, engine);
 
-    World.add(world, [ground, leftWall, rightWall]);
+        const wallOptions = { isStatic: true, render: { fillStyle: '#dfe6e9' } };
+        const ground = Bodies.rectangle(width / 2, height - 10, width, 20, wallOptions);
+        const leftWall = Bodies.rectangle(10, height / 2, 20, height, wallOptions);
+        const rightWall = Bodies.rectangle(width - 10, height / 2, 20, height, wallOptions);
 
-    // 오디오 요소
+        World.add(world, [ground, leftWall, rightWall]);
+
+        return { engine, world, render, width, height };
+    }
+
+    const game = initGame();
+    const { engine, world, render, width, height } = game;
+
     const bgm = document.getElementById('bgm');
     const dropSound = document.getElementById('dropSound');
 
@@ -545,7 +558,6 @@
     let dropX = width / 2;
     let isDragging = false;
 
-    // BGM 자동 재생 시도
     document.addEventListener('click', () => {
         if (bgm.paused) {
             bgm.play().catch(e => console.log('BGM 재생 실패:', e));
@@ -591,9 +603,7 @@
         const nextFruitDiv = document.getElementById('nextFruit');
         const nextFruitPreview = document.getElementById('nextFruitPreview');
 
-        // 현재 들고 있는 과일 표시
         const currentFruit = categories[currentCategory][currentFruitLevel];
-        // 다음 과일 표시 (수정됨)
         const nextFruit = categories[currentCategory][nextFruitLevel];
 
         nextFruitDiv.innerHTML = `
@@ -617,14 +627,14 @@
             <div style="
                 background: ${nextFruit.color};
                 border-radius: 50%;
-                width: 35px;
-                height: 35px;
+                width: 30px;
+                height: 30px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-weight: bold;
                 color: white;
-                font-size: 11px;
+                font-size: 10px;
                 box-shadow: 0 2px 8px rgba(0,0,0,0.2);
             ">${nextFruit.name}</div>
         `;
@@ -633,21 +643,18 @@
     function dropFruit(x) {
         if (!canDrop || gameOverFlag) return;
 
-        // 경계선 체크 (좌우로 못 나가게)
         const fruit = categories[currentCategory][currentFruitLevel];
         const minX = 30 + fruit.size / 2;
         const maxX = width - 30 - fruit.size / 2;
         x = Math.max(minX, Math.min(maxX, x));
 
         canDrop = false;
-        const body = createBody(currentFruitLevel, x, 80);
+        const body = createBody(currentFruitLevel, x, 70);
         World.add(world, body);
 
-        // 드롭 효과음 재생
         dropSound.currentTime = 0;
         dropSound.play().catch(e => console.log('효과음 재생 실패:', e));
 
-        // 즉시 다음 과일로 변경
         currentFruitLevel = nextFruitLevel;
         nextFruitLevel = Math.floor(Math.random() * 5);
         updateNextFruit();
@@ -664,7 +671,6 @@
         }
     });
 
-    // 터치/마우스 드래그 개선
     canvas.addEventListener('touchstart', (e) => {
         e.preventDefault();
         isDragging = true;
@@ -735,9 +741,8 @@
             } else if (bodyA.label === 'fruit' && bodyB.label === 'fruit' &&
                        bodyA.fruitLevel === bodyB.fruitLevel &&
                        bodyA.fruitLevel === categories[currentCategory].length - 1) {
-                // 최종 단계 병합 시 사라지게 (무한 모드)
                 World.remove(world, [bodyA, bodyB]);
-                score += 1000; // 보너스 점수
+                score += 1000;
                 document.getElementById('score').textContent = `점수: ${score}`;
             }
         });
@@ -746,7 +751,7 @@
     Events.on(engine, 'afterUpdate', () => {
         const bodies = world.bodies.filter(b => b.label === 'fruit');
         bodies.forEach(body => {
-            if (body.position.y < 80 && body.velocity.y < 0.1 && Math.abs(body.velocity.x) < 0.1) {
+            if (body.position.y < 70 && body.velocity.y < 0.1 && Math.abs(body.velocity.x) < 0.1) {
                 if (!gameOverFlag) {
                     gameOverFlag = true;
                     setTimeout(() => {
@@ -759,17 +764,14 @@
         });
     });
 
-    // 스킨 선택 모달
     document.getElementById('skinSelector').addEventListener('click', () => {
         document.getElementById('skinModal').style.display = 'flex';
     });
 
-    // X 버튼으로 닫기 (초기화 없이)
     document.getElementById('closeModalX').addEventListener('click', () => {
         document.getElementById('skinModal').style.display = 'none';
     });
 
-    // 적용하기 버튼 (재시작)
     document.getElementById('closeModal').addEventListener('click', () => {
         document.getElementById('skinModal').style.display = 'none';
         restartGame();
@@ -836,7 +838,6 @@
         });
     });
 
-    // 게임 결과 저장 (Flutter로 전송)
     function saveGameResult() {
         let gameResult = 0;
         if (score >= 10000) {

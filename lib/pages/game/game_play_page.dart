@@ -30,6 +30,7 @@ class _GamePlayPageState extends State<GamePlayPage> {
   }
 
   void _initializeWebView() {
+
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       // 하드웨어 가속 활성화
@@ -58,6 +59,8 @@ class _GamePlayPageState extends State<GamePlayPage> {
       )
       ..loadFlutterAsset(_getGameAssetPath());
   }
+
+
   
   // 게임 번호에 따라 asset 경로 반환
   String _getGameAssetPath() {
