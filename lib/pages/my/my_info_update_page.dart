@@ -29,6 +29,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
   PhoneNumber? emailPhoneNumber;
 
 
+
+
   // 전화번호 중복 확인 메소드
   void checkPhone () async{
     try{
