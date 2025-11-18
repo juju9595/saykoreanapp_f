@@ -14,6 +14,21 @@ class ApiClient {
     return 'http://localhost:8080';
   }
 
+  // WebSocket용 URL 자동 분기 추가
+  static String detectWsUrl(){
+    final env = const String.fromEnvironment('API_HOST');
+    if(env.isNotEmpty){
+      return env.replaceFirst("http", "ws") + "/ws/chat";
+    }
+    if(kIsWeb){
+      return 'ws://localhost:8080/ws/chat';
+    }
+    if(Platform.isAndroid){
+      return 'ws://10.0.2.2:8080/ws/chat';
+    }
+    return 'ws://localhost:8080/ws/chat';
+  }
+
   static final Dio dio = Dio(
     BaseOptions(
       baseUrl: _detectBaseUrl(),

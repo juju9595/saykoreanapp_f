@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:saykoreanapp_f/api.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  final ScrollController _scroll = ScrollController();
   late WebSocketChannel _channel;
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
@@ -27,17 +29,33 @@ class _ChatPageState extends State<ChatPage> {
   void initState() {
     super.initState();
 
-    _channel = WebSocketChannel.connect(
-      Uri.parse(
-        'ws://10.0.2.2:8080/ws/chat?roomNo=${widget.roomNo}&userNo=${widget.myUserNo}',
-      ),
-    );
+   // WebSocket URL 생성
+    final wsUrl =
+    "${ApiClient.detectWsUrl()}?roomNo=${widget.roomNo}&userNo=${widget.myUserNo}";
+    print("WebSocket Connect URL : $wsUrl");
 
+    // WebSocket 연결
+    _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
+
+    //메시지 수신 리스너
     _channel.stream.listen((data) {
       final decoded = jsonDecode(data as String);
       setState(() {
         _messages.add(decoded); // {sendNo, message, time}
       });
+
+      // 자동 스크롤 맨 알래로
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (_scroll.hasClients){
+          _scroll.jumpTo(_scroll.position.maxScrollExtent);
+        }
+      });
+
+      // // 새로운 메시지 알림
+      // if(decoded["type"] == "message" &&
+      // decoded["sendNo"] != widget.myUserNo){
+      //   _showNewMessageToast();
+      // }
     });
   }
 
