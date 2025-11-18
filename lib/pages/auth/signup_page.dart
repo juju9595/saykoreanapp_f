@@ -42,8 +42,18 @@ class _SignupState extends State<SignupPage> {
     //   Fluttertoast.showToast(msg: "reCAPTCHA를 확인해 주세요.", backgroundColor: Colors.orange);
     //   return;
     // }
+    // 공백 또는 빈 문자열 유효성 검사
+    if(nameCon.text.trim().isEmpty ||
+        emailCon.text.trim().isEmpty ||
+        passwordCon.text.trim().isEmpty ||
+        nickNameCon.text.trim().isEmpty ||
+        phoneCon.text.trim().isEmpty)
+    {
+      Fluttertoast.showToast(msg: "입력값을 채워주세요.", backgroundColor: Colors.red);
+      print("입력값을 채워주세요.");
+      return;}
     if( emailCheck == false || phoneCheck == false ){
-      Fluttertoast.showToast(msg: "중복 확인을 해주세요.",backgroundColor: Colors.red); print("중복 확인을 해주세요.");
+      Fluttertoast.showToast(msg: "중복 확인을 모두 해주세요.",backgroundColor: Colors.red); print("중복 확인을 해주세요.");
       return;}
     // 1. [수정] 로딩 화면을 가장 먼저 표시
     showDialog(
@@ -138,7 +148,7 @@ class _SignupState extends State<SignupPage> {
           emailCheck=true;
         });
         Fluttertoast.showToast(msg: "이메일 사용이 가능합니다.", backgroundColor: Colors.greenAccent);
-      }else{Fluttertoast.showToast(msg: "사용 중인 이메일입니다..", backgroundColor: Colors.red);}
+      }else{Fluttertoast.showToast(msg: "이메일 형식이 올바르지 않거나, 사용 중인 이메일입니다ㄹ.", backgroundColor: Colors.red);}
     }catch(e){print(e);}
   }
 
@@ -159,7 +169,7 @@ class _SignupState extends State<SignupPage> {
           phoneCheck=true;
         });
         Fluttertoast.showToast(msg: "전화번호 사용이 가능합니다.", backgroundColor: Colors.greenAccent);
-      }else{Fluttertoast.showToast(msg: "사용 중인 전화번호입니다..", backgroundColor: Colors.red);}
+      }else{Fluttertoast.showToast(msg: "전화번호 형식이 올바르지 않거나, 사용 중인 전화번호입니다.", backgroundColor: Colors.red);}
     }catch(e){
       print(e);}
   }
