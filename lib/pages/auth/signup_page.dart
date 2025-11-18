@@ -26,20 +26,25 @@ class _SignupState extends State<SignupPage> {
   TextEditingController nickNameCon = TextEditingController();
   TextEditingController phoneCon = TextEditingController();
 
+  // 중복검사 상태관리
+  bool emailCheck = false;
+  bool phoneCheck = false;
   // [추가] reCAPTCHA V2 체크박스 상태를 흉내 낼 변수
   bool _isRecaptchaChecked = false;
 
   // 서버 전송용 국제번호 저장 변수
   PhoneNumber? emailPhoneNumber;
 
-  // * 등록 버튼 클릭 시
+  // 회원가입 함수
   void onSignup() async {
     // // [추가] V2처럼 사용자가 체크했는지 확인
     // if (!_isRecaptchaChecked) {
     //   Fluttertoast.showToast(msg: "reCAPTCHA를 확인해 주세요.", backgroundColor: Colors.orange);
     //   return;
     // }
-
+    if( emailCheck == false || phoneCheck == false ){
+      Fluttertoast.showToast(msg: "중복 확인을 해주세요.",backgroundColor: Colors.red); print("중복 확인을 해주세요.");
+      return;}
     // 1. [수정] 로딩 화면을 가장 먼저 표시
     showDialog(
       context: context,
@@ -127,13 +132,37 @@ class _SignupState extends State<SignupPage> {
         ),
         queryParameters: { 'email' : emailCon.text }
       );
-      if(response.statusCode == 200 && response.data != null){
-
-      }
+      print("(중복 : 1 , 사용 가능 : 0 반환 ): ${response.data}");
+      if(response.statusCode == 200 && response.data != null && response.data == 0){
+        setState(() {
+          emailCheck=true;
+        });
+        Fluttertoast.showToast(msg: "이메일 사용이 가능합니다.", backgroundColor: Colors.greenAccent);
+      }else{Fluttertoast.showToast(msg: "사용 중인 이메일입니다..", backgroundColor: Colors.red);}
     }catch(e){print(e);}
   }
 
   // 전화번호 중복 확인 메소드
+  void checkPhone () async{
+    try{
+      final plusPhone = emailPhoneNumber?.completeNumber ?? phoneCon.text;
+      final response = await ApiClient.dio.get(
+        "/saykorean/checkphone",
+        options: Options(
+          validateStatus: (status) => true,
+        ),
+        queryParameters: { 'phone' : plusPhone }
+      );
+      print("(중복 : 1 , 사용 가능 : 0 반환 ): ${response.data}");
+      if(response.statusCode == 200 && response.data != null && response.data == 0){
+        setState(() {
+          phoneCheck=true;
+        });
+        Fluttertoast.showToast(msg: "전화번호 사용이 가능합니다.", backgroundColor: Colors.greenAccent);
+      }else{Fluttertoast.showToast(msg: "사용 중인 전화번호입니다..", backgroundColor: Colors.red);}
+    }catch(e){
+      print(e);}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +218,7 @@ class _SignupState extends State<SignupPage> {
                   print("입력한 번호: ${phone.number}");
                 }, // 입력 위젯, 전화번호
               ),
-              ElevatedButton(onPressed: checkEmail, child: Text("중복 확인")),
+              ElevatedButton(onPressed: checkPhone, child: Text("중복 확인")),
               SizedBox(height: 20,),
 
               // // 리캡챠
