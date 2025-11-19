@@ -28,6 +28,42 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
   // 서버 전송용 국제번호 저장 변수
   PhoneNumber? emailPhoneNumber;
 
+  // 탈퇴용 비밀번호 입력 팝업 메소드
+  Future<String?> showPasswordPrompt() async {
+    final TextEditingController controller = TextEditingController();
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("정말 탈퇴하시겠습니까?"),
+          content: TextField(
+            controller: controller,
+            obscureText: true,
+              decoration: InputDecoration(
+                hintText: "비밀번호를 입력해주세요.",
+              ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: (){
+                  Navigator.pop(context);
+                },
+            child: Text("취소"),
+            ),
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context,controller.text);
+                },
+                child: Text("확인"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // 전화번호 중복 확인 메소드
   void checkPhone () async{
     try{
@@ -111,9 +147,30 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
   }
   // 탈퇴 메소드
   void deleteUserStatus () async {
-    final TextEditingController enterPassCon = TextEditingController();
     try{
+      // 비밀번호 입력 팝업 띄우기ㅣ
+      final inputPassword = await showPasswordPrompt();
 
+      // 취소 누르면 null -> 종료
+      if (inputPassword == null || inputPassword.trim().isEmpty){
+        Fluttertoast.showToast(msg: "취소되었습니다.",backgroundColor: Colors.red);
+        return;
+      }
+      // 서버로 전송
+      final response = await ApiClient.dio.put(
+        "/saykorean/deleteuser",
+        data: {"password" : inputPassword},
+        options: Options(
+          validateStatus: (status)=>true,
+        ),
+      );
+      print("탈퇴 성공 시 1 반환: ${response.data}");
+
+      if( response.statusCode == 200 && response.data == 1){
+        Fluttertoast.showToast(msg: "회원 탈퇴가 완료되었습니다.",backgroundColor: Colors.greenAccent);
+      }else{
+        Fluttertoast.showToast(msg: "비밀번호가 올바르지 않습니다.",backgroundColor: Colors.red);
+      }
     }catch(e){print(e);}
   }
 
