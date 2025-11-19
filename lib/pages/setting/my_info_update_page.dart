@@ -71,9 +71,10 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
       );
       print(response);
       print(response.data);
-      if(response.statusCode == 200 && response.data != null && response.data){
+      if(response.statusCode == 200 && response.data != null
+          && response.data){
       Fluttertoast.showToast(msg: "수정이 완료되었습니다.",backgroundColor: Colors.greenAccent);}
-      else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 넣어주세요.",backgroundColor: Colors.greenAccent);}
+      else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
     }catch(e){print(e);}
   }
 
@@ -100,10 +101,17 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
           validateStatus: (status) => true,
         ),
       );
+      print(response);
+      print(response.data);
+      if(response.statusCode == 200 && response.data != null
+        && response.data){
+        Fluttertoast.showToast(msg: "수정이 완료되었습니다.",backgroundColor: Colors.greenAccent);
+      }else{Fluttertoast.showToast(msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",backgroundColor: Colors.greenAccent);}
     }catch(e){print(e);}
   }
   // 탈퇴 메소드
   void deleteUserStatus () async {
+    final TextEditingController enterPassCon = TextEditingController();
     try{
 
     }catch(e){print(e);}

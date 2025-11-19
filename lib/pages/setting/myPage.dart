@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 import 'package:saykoreanapp_f/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
-import 'package:saykoreanapp_f/pages/my/my_info_update_page.dart';
+import 'package:saykoreanapp_f/pages/setting/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
