@@ -21,14 +21,13 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    loadUserInfo(); //
+    loadUserInfo();
   }
 
   void loadUserInfo() async {
     final prefs = await SharedPreferences.getInstance();
     final no = prefs.getInt('myUserNo');
     final token = prefs.getString('token');
-
 
     print("HomePage에서 가져온 userNo = $no");
 
@@ -46,6 +45,7 @@ class _HomePageState extends State<HomePage> {
           validateStatus: (status) => true,
         ),
       );
+      print('logout response = ${response.statusCode}');
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('token');
@@ -62,51 +62,48 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final theme = Theme.of(context);
-    final bg = theme.scaffoldBackgroundColor;
+    final size   = MediaQuery.of(context).size;
+    final theme  = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg     = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
 
     // 로딩 중일 때
     if (myUserNo == null) {
       return Scaffold(
         backgroundColor: bg,
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    // ⭐ StartPage와 동일한 UI 구조
+    // StartPage와 동일한 구조
     return Scaffold(
       backgroundColor: bg,
       body: Stack(
         children: [
-          // ── 상단 물결 배경 (PNG)
+          // ── 상단 물결 (라이트: PNG, 다크: 커스텀 웨이브)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             height: size.height * 0.22,
-            child: Image.asset(
+            child: isDark
+                ? CustomPaint(painter: _WavePainterDark(scheme))
+                : Image.asset(
               _bgWave,
               fit: BoxFit.cover,
             ),
           ),
 
-          // 커스텀 페인터 물결
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: size.height * 0.22,
-            child: CustomPaint(painter: _WavePainter()),
-          ),
-
-          // 하단 물결
+          // ── 하단 물결 (라이트/다크 분기)
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             height: size.height * 0.18,
-            child: CustomPaint(painter: _BottomPinkWavePainter()),
+            child: isDark
+                ? CustomPaint(painter: _BottomWaveDark(scheme))
+                : CustomPaint(painter: _BottomWaveLight()),
           ),
 
           // ── 메인 컨텐츠 영역
@@ -118,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // 타이틀: "재밌는 한국어"
-                    _TitleFancy(),
+                    const _TitleFancy(),
 
                     const SizedBox(height: 16),
 
@@ -131,11 +128,9 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-
-
                     const SizedBox(height: 32),
 
-                    // ⭐ 로그아웃 버튼 (StartPage 버튼 스타일 그대로)
+                    // 로그인 상태일 때만 로그아웃 버튼 노출
                     if (isLogin)
                       SizedBox(
                         width: double.infinity,
@@ -153,20 +148,22 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           onPressed: () async {
-                            // 확인 다이얼로그
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: Text('로그아웃'),
-                                content: Text('정말 로그아웃 하시겠습니까?'),
+                                title: const Text('로그아웃'),
+                                content:
+                                const Text('정말 로그아웃 하시겠습니까?'),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
-                                    child: Text('취소'),
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('취소'),
                                   ),
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    child: Text('로그아웃'),
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text('로그아웃'),
                                   ),
                                 ],
                               ),
@@ -176,12 +173,11 @@ class _HomePageState extends State<HomePage> {
                               LogOut();
                             }
                           },
-                          child: Text('로그아웃'),
+                          child: const Text('로그아웃'),
                         ),
                       ),
 
                     const SizedBox(height: 10),
-
                   ],
                 ),
               ),
@@ -194,15 +190,16 @@ class _HomePageState extends State<HomePage> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ⭐⭐⭐ StartPage에서 복사한 위젯들 (여기부터 필수!)
+// 타이틀 "재밌는 한국어"
 // ─────────────────────────────────────────────────────────────────────────────
 
-// 상단 타이틀 "재밌는 한국어" 꾸밈
 class _TitleFancy extends StatelessWidget {
+  const _TitleFancy();
+
   @override
   Widget build(BuildContext context) {
     const cGreen = Color(0xFFA8E6CF); // 민트-블루
-    const cPink = Color(0xFFFFAAA5); // 코랄-핑크
+    const cPink  = Color(0xFFFFAAA5); // 코랄-핑크
     const cBrown = Color(0xFF6B4E42); // 갈색 텍스트
 
     return RichText(
@@ -248,12 +245,58 @@ class _TitleFancy extends StatelessWidget {
   }
 }
 
-// (옵션) 커스텀 물결 — 상단 PNG가 없을 때만 사용
-class _WavePainter extends CustomPainter {
+// ─────────────────────────────────────────────────────────────────────────────
+// 물결 Painter들 (라이트/다크 분리)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// 라이트 모드 하단 핑크 웨이브
+class _BottomWaveLight extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final top = const Color(0xFFA8E6CF); // 민트
-    final mid = const Color(0xFFA8E6CF);
+    const c1 = Color(0x80FFAAA5);
+    const c2 = Color(0x80FFAAA5);
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [c1, c2],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final path = Path()
+      ..moveTo(0, size.height * 0.25)
+      ..quadraticBezierTo(
+        size.width * 0.20,
+        size.height * 0.05,
+        size.width * 0.45,
+        size.height * 0.18,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.75,
+        size.height * 0.34,
+        size.width,
+        size.height * 0.10,
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// 다크 모드 상단 웨이브
+class _WavePainterDark extends CustomPainter {
+  final ColorScheme scheme;
+  _WavePainterDark(this.scheme);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final top = scheme.primaryContainer.withOpacity(0.85);
+    final mid = scheme.surface;
+
     final paint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
@@ -262,11 +305,19 @@ class _WavePainter extends CustomPainter {
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path()
-      ..lineTo(0, size.height * 0.65)
-      ..quadraticBezierTo(size.width * 0.25, size.height * 0.50,
-          size.width * 0.5, size.height * 0.58)
-      ..quadraticBezierTo(size.width * 0.8, size.height * 0.66,
-          size.width, size.height * 0.45)
+      ..lineTo(0, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.55,
+        size.width * 0.5,
+        size.height * 0.65,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.8,
+        size.height * 0.75,
+        size.width,
+        size.height * 0.55,
+      )
       ..lineTo(size.width, 0)
       ..close();
 
@@ -277,24 +328,37 @@ class _WavePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _BottomPinkWavePainter extends CustomPainter {
+// 다크 모드 하단 웨이브
+class _BottomWaveDark extends CustomPainter {
+  final ColorScheme scheme;
+  _BottomWaveDark(this.scheme);
+
   @override
   void paint(Canvas canvas, Size size) {
-    const c1 = Color(0x80FFAAA5); // 옅은 핑크
-    const c2 = Color(0x80FFAAA5); // 더 연한 핑크
+    final c1 = scheme.secondaryContainer.withOpacity(0.9);
+    final c2 = scheme.surface;
+
     final paint = Paint()
-      ..shader = const LinearGradient(
+      ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [c1, c2],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path()
-      ..moveTo(0, size.height * 0.25)
-      ..quadraticBezierTo(size.width * 0.20, size.height * 0.05,
-          size.width * 0.45, size.height * 0.18)
-      ..quadraticBezierTo(size.width * 0.75, size.height * 0.34,
-          size.width, size.height * 0.10)
+      ..moveTo(0, size.height * 0.15)
+      ..quadraticBezierTo(
+        size.width * 0.20,
+        0,
+        size.width * 0.45,
+        size.height * 0.18,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.75,
+        size.height * 0.36,
+        size.width,
+        size.height * 0.12,
+      )
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
       ..close();
