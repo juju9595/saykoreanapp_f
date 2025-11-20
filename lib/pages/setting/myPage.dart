@@ -140,8 +140,12 @@ class _MyPageState extends State<MyPage> {
       if (response.statusCode == 200 && response.data != null ){
         List<dynamic> attendList = response.data;
 
+        int streak = 0;
+
         setState(() {
           attendDay = attendList.length;
+          MaxStreak = streak;
+
 
 
         });
@@ -149,6 +153,7 @@ class _MyPageState extends State<MyPage> {
 
     }catch(e){print(e);}
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +295,7 @@ class _MyPageState extends State<MyPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      attendDay == null ? "${attendDay}일" : "정보 없음",
+                      attendDay == null ? "정보 없음" : "${attendDay} 일",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -314,7 +319,7 @@ class _MyPageState extends State<MyPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      MaxStreak == null ? "${MaxStreak}일" : "정보 없음",
+                      MaxStreak == null ? "정보 없음" : "${MaxStreak} 일",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
