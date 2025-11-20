@@ -134,27 +134,27 @@ class _TestListPageState extends State<TestListPage> {
 
   @override
   Widget build(BuildContext context) {
-    const cream = Color(0xFFFFF9F0);
-    const brown = Color(0xFF6B4E42);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     print("TestListPage build(), tests.length=${_tests.length}");
 
     return Scaffold(
-      backgroundColor: cream,
+      // backgroundColor: cream,  // ❌ 직접 지정 X
       appBar: AppBar(
         title: const Text('내 테스트 목록'),
-        backgroundColor: cream,
+        // backgroundColor: cream,      // ❌ 테마가 알아서
+        // foregroundColor: brown,      // ❌
         elevation: 0,
-        foregroundColor: brown,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: _buildBody(),
+        child: _buildBody(theme, scheme),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(ThemeData theme, ColorScheme scheme) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -166,7 +166,7 @@ class _TestListPageState extends State<TestListPage> {
           children: [
             Text(
               _error!,
-              style: const TextStyle(color: Colors.red),
+              style: theme.textTheme.bodyMedium?.copyWith(color: scheme.error),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -180,8 +180,11 @@ class _TestListPageState extends State<TestListPage> {
     }
 
     if (_tests.isEmpty) {
-      return const Center(
-        child: Text('완수한 주제의 테스트가 아직 없습니다.'),
+      return Center(
+        child: Text(
+          '완수한 주제의 테스트가 아직 없습니다.',
+          style: theme.textTheme.bodyMedium,
+        ),
       );
     }
 
@@ -205,17 +208,16 @@ class _TestListPageState extends State<TestListPage> {
 
         final desc = (t['testDesc'] ?? '').toString();
 
-        // ✅ testMode에 따라 배지 표시
         final testMode = t['testMode'] as String?;
         String modeLabel = '';
-        Color modeColor = Colors.grey;
+        Color modeColor = scheme.outline;
 
         if (testMode == 'INFINITE') {
           modeLabel = '♾️ 무한';
-          modeColor = const Color(0xFFFF9800);
+          modeColor = Colors.orange;
         } else if (testMode == 'HARD') {
           modeLabel = '🔥 하드';
-          modeColor = const Color(0xFFF44336);
+          modeColor = Colors.red;
         }
 
         return SizedBox(
@@ -223,19 +225,15 @@ class _TestListPageState extends State<TestListPage> {
           child: ElevatedButton(
             onPressed: () => _onTapTest(t),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: const Color(0xFF6B4E42),
+              // 배경/텍스트도 테마 기반으로
+              backgroundColor: scheme.surface,
+              foregroundColor: scheme.onSurface,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Color(0xFFE5E7EB)),
+                side: BorderSide(color: scheme.outlineVariant),
               ),
             ),
-
-            // child: Align(
-            //   alignment: Alignment.centerLeft,
-            //   child: Column(
-
             child: Row(
               children: [
                 Expanded(
@@ -243,55 +241,42 @@ class _TestListPageState extends State<TestListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                  Row(
-                  children: [
-                  Expanded(
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-
-                  // if (desc.isNotEmpty)
-                  //   Text(
-                  //     desc,
-                  //     overflow: TextOverflow.ellipsis,
-                  //     style: const TextStyle(
-                  //       fontSize: 12,
-                  //       color: Color(0xFF6B7280),
-                  //     ),
-                  //   ),
-
-                  // ✅ 모드 배지 표시
-                  if (modeLabel.isNotEmpty)
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              title,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          if (modeLabel.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(left: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: modeColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: modeColor.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                modeLabel,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: modeColor,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
-                      decoration: BoxDecoration(
-                        color: modeColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: modeColor.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Text(
-                        modeLabel,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: modeColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                  ),
                     ],
                   ),
                 ),

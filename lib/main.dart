@@ -130,19 +130,69 @@ class MyApp extends StatelessWidget {
             ),
           ),
 
-          // 다크 테마
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
-            scaffoldBackgroundColor: const Color(0xFF121212),
+
+            // 너무 까맣지 않은 다크 배경
+            scaffoldBackgroundColor: const Color(0xFF1E1816),
+
             colorScheme: ColorScheme.fromSeed(
               seedColor: const Color(0xFF6B4E42),
               brightness: Brightness.dark,
+            ).copyWith(
+              surface: const Color(0xFF261E1B),
+              surfaceContainerHighest: const Color(0xFF2D2421),
+              surfaceContainerHigh: const Color(0xFF29201D),
+              surfaceContainer: const Color(0xFF231B19),
             ),
+
             appBarTheme: const AppBarTheme(
-              backgroundColor: Color(0xFF121212),
-              foregroundColor: Colors.white,
+              backgroundColor: Color(0xFF1E1816),
+              foregroundColor: Color(0xFFF7E0B4),
               elevation: 0,
+              centerTitle: true,
+            ),
+
+            // 🔥 여기! CardTheme → CardThemeData 로 변경
+            cardTheme: const CardThemeData(
+              color: Color(0xFF261E1B),
+              elevation: 1,
+              margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(16)),
+              ),
+            ),
+
+            bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+              backgroundColor: Color(0xFF1E1816),
+              selectedItemColor: Color(0xFFF7E0B4),
+              unselectedItemColor: Color(0xFFB0A3A0),
+              type: BottomNavigationBarType.fixed,
+            ),
+
+            textTheme: const TextTheme(
+              bodyLarge: TextStyle(
+                color: Color(0xFFF5ECE7),
+              ),
+              bodyMedium: TextStyle(
+                color: Color(0xFFE0D4CF),
+              ),
+              titleLarge: TextStyle(
+                color: Color(0xFFF7E0B4),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6B4E42),
+                foregroundColor: const Color(0xFFF7E0B4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
             ),
           ),
 
