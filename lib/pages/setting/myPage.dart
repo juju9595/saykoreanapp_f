@@ -145,15 +145,34 @@ class _MyPageState extends State<MyPage> {
         setState(() {
           attendDay = attendList.length;
           MaxStreak = streak;
-
-
-
         });
       }
 
     }catch(e){print(e);}
   }
 
+  // int getMaxStreak(List<dynamic> attendList){
+  //   if ( attendList.isEmpty) return 0;
+  //   final dates = attendList
+  //   .map((item)=>DateTime.parse(item['attendDay']))
+  //   .toList()
+  //   ..sort((a,b) => a.compareTo(b));
+  //
+  //   int maxStreak = 1;
+  //   int currentStreak =1;
+  //
+  //   for (int i =1; i< dates.length; i++){
+  //     final diffDays = dates[i].difference(dates[i=1]).inDays;
+  //
+  //     if (diffDays == 1){
+  //       currentStreak += 1;
+  //     } else {
+  //       currentStreak = 1;
+  //     }
+  //
+  //   //   if( currentStreak> maxStreak)
+  //   // }
+  // }
 
   @override
   Widget build(BuildContext context) {
