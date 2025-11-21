@@ -159,27 +159,75 @@ class _MyPageState extends State<MyPage> {
     }
   }
 
-  // 출석 일수 조회
+  // 출석 조회 메소드
   void findAttend() async {
     try {
       final response = await ApiClient.dio.get(
         '/saykorean/attend',
-        options: Options(
-          validateStatus: (status) => true,
-        ),
+        options: Options(validateStatus: (status) => true),
       );
 
       if (response.statusCode == 200 && response.data != null) {
         List<dynamic> attendList = response.data;
+        print("출석 리스트: $attendList");
+
+        int calculatedCurrentStreak = 0;
+
+        if (attendList.isNotEmpty) {
+          // 날짜만 추출하고 정렬 (최신순)
+          final dates = attendList
+              .map((item) => DateTime.parse(item['attendDay']))
+              .toList()
+            ..sort((a, b) => b.compareTo(a)); // 내림차순 정렬 (최신날짜가 앞에)
+
+          final today = DateTime.now();
+          final todayDate = DateTime(today.year, today.month, today.day);
+
+          // 가장 최근 출석일
+          final lastAttendDate = DateTime(
+              dates[0].year,
+              dates[0].month,
+              dates[0].day
+          );
+
+          // 마지막 출석이 오늘이거나 어제인 경우에만 연속 계산
+          final daysSinceLastAttend = todayDate.difference(lastAttendDate).inDays;
+
+          if (daysSinceLastAttend <= 1) {
+            calculatedCurrentStreak = 1;
+
+            // 역순으로 현재 연속 출석일 계산
+            for (int i = 1; i < dates.length; i++) {
+              final currentDate = DateTime(dates[i].year, dates[i].month, dates[i].day);
+              final prevDate = DateTime(dates[i - 1].year, dates[i - 1].month, dates[i - 1].day);
+
+              final diffDays = prevDate.difference(currentDate).inDays;
+
+              if (diffDays == 1) {
+                calculatedCurrentStreak += 1;
+              } else {
+                break; // 연속이 끊기면 중단
+              }
+            }
+          } else {
+            // 오늘/어제 출석하지 않았으면 연속 0
+            calculatedCurrentStreak = 0;
+          }
+        }
 
         setState(() {
           attendDay = attendList.length;
+          maxStreak = calculatedCurrentStreak; // 현재 연속 출석일수
         });
+
+        print("현재 연속 출석일수: $calculatedCurrentStreak");
       }
     } catch (e) {
-      print(e);
+      print("출석 조회 오류: $e");
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
