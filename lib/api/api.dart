@@ -1,7 +1,11 @@
 // lib/api.dart
 import 'dart:io';
+import 'package:saykoreanapp_f/main.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiClient {
@@ -65,18 +69,26 @@ class ApiClient {
         return handler.next(response);
       },
       onError: (error, handler) async{
-        print('❌ API 에러: ${error.response?.statusCode}');
-        if( error.response == 401 ){
+        final status = error.response?.statusCode;
 
-        }
+        print('❌ API 에러: ${status}');
         print('   URL: ${error.requestOptions.uri}');
         print('   메시지: ${error.response?.data}');
+
+        // 토큰 만료 또는 인증 실패 시 자동 로그아웃
+        if( status == 401){
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('token');
+          // 로그인 화면으로 이동
+          appNavigatorKey.currentState?.pushNamedAndRemoveUntil(
+            '/login',
+              (_) => false,
+          );
+        }
         return handler.next(error);
       }
     ),
   );
-
-
 
   // [*] Base URI (URL 생성용)
   static final Uri _baseUri = Uri.parse(_detectBaseUrl());
