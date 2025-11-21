@@ -76,7 +76,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    return Scaffold(
+    return Scaffold( //
       backgroundColor: bg,
       body: Stack(
         children: [
