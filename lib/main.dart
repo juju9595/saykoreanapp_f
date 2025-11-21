@@ -360,16 +360,11 @@ class MyApp extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // 라우터
 // ─────────────────────────────────────────────────────────────
-
 Route<dynamic>? _onGenerateRoute(RouteSettings settings) {
   if (settings.name == "/testList") {
-    final studyNo = int.tryParse(settings.arguments.toString());
-
     return MaterialPageRoute(
       settings: settings,
-      builder: (_) => (studyNo == null)
-          ? const _RouteArgErrorPage(message: "studyNo가 필요합니다.")
-          : IfLogin(child: TestModePage()),
+      builder: (_) => IfLogin(child: const TestModePage()),
     );
   }
 
