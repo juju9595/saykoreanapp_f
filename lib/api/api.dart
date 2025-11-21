@@ -64,14 +64,19 @@ class ApiClient {
         print('✅ 응답 성공: ${response.statusCode}');
         return handler.next(response);
       },
-      onError: (error, handler) {
+      onError: (error, handler) async{
         print('❌ API 에러: ${error.response?.statusCode}');
+        if( error.response == 401 ){
+
+        }
         print('   URL: ${error.requestOptions.uri}');
         print('   메시지: ${error.response?.data}');
         return handler.next(error);
       }
     ),
   );
+
+
 
   // [*] Base URI (URL 생성용)
   static final Uri _baseUri = Uri.parse(_detectBaseUrl());

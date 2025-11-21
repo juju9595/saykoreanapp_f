@@ -37,6 +37,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  // 로그아웃 메소드
   void LogOut() async {
     try {
       final response = await ApiClient.dio.get(

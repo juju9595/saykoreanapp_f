@@ -140,15 +140,39 @@ class _MyPageState extends State<MyPage> {
       if (response.statusCode == 200 && response.data != null ){
         List<dynamic> attendList = response.data;
 
+        int streak = 0;
+
         setState(() {
           attendDay = attendList.length;
-
-
+          MaxStreak = streak;
         });
       }
 
     }catch(e){print(e);}
   }
+
+  // int getMaxStreak(List<dynamic> attendList){
+  //   if ( attendList.isEmpty) return 0;
+  //   final dates = attendList
+  //   .map((item)=>DateTime.parse(item['attendDay']))
+  //   .toList()
+  //   ..sort((a,b) => a.compareTo(b));
+  //
+  //   int maxStreak = 1;
+  //   int currentStreak =1;
+  //
+  //   for (int i =1; i< dates.length; i++){
+  //     final diffDays = dates[i].difference(dates[i=1]).inDays;
+  //
+  //     if (diffDays == 1){
+  //       currentStreak += 1;
+  //     } else {
+  //       currentStreak = 1;
+  //     }
+  //
+  //   //   if( currentStreak> maxStreak)
+  //   // }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -290,7 +314,7 @@ class _MyPageState extends State<MyPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      attendDay == null ? "${attendDay}일" : "정보 없음",
+                      attendDay == null ? "정보 없음" : "${attendDay} 일",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -314,7 +338,7 @@ class _MyPageState extends State<MyPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      MaxStreak == null ? "${MaxStreak}일" : "정보 없음",
+                      MaxStreak == null ? "정보 없음" : "${MaxStreak} 일",
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
