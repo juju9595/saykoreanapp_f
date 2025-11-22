@@ -251,7 +251,8 @@ class _TestPageState extends State<TestPage> {
     final testItemNo = cur['testItemNo'] ?? 0;
 
     // ✅ 무한/하드모드는 testNo가 0이므로 testItemNo 기반 URL 생성
-    final effectiveTestNo = widget.testNo > 0 ? widget.testNo : 1;
+    final effectiveTestNo = widget.testNo;
+    // 무한/하드모드(testNo=0)일 때 → 0 그대로 유지 → 서버에서 단일 문항 조회 성공!
     final url =
         "/saykorean/test/$effectiveTestNo/items/$testItemNo/answer";
 
