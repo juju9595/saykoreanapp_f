@@ -75,7 +75,7 @@ class ApiClient {
           );
 
         }
-        print('✅ 응답 성공: ${response.statusCode}');
+        print('✅ 응답 코드: ${response.statusCode}');
         return handler.next(response);
       },
       onError: (error, handler) async{
