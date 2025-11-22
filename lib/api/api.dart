@@ -64,7 +64,17 @@ class ApiClient {
         print('🌐 요청: ${options.method} ${options.uri}');
         return handler.next(options);
       },
-      onResponse: (response,handler){
+      onResponse: (response,handler) async {
+        if( response.statusCode == 401){
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('token');
+          // 로그인 화면으로 이동
+          appNavigatorKey.currentState?.pushNamedAndRemoveUntil(
+            '/login',
+                (_) => false,
+          );
+
+        }
         print('✅ 응답 성공: ${response.statusCode}');
         return handler.next(response);
       },
@@ -75,16 +85,6 @@ class ApiClient {
         print('   URL: ${error.requestOptions.uri}');
         print('   메시지: ${error.response?.data}');
 
-        // 토큰 만료 또는 인증 실패 시 자동 로그아웃
-        if( status == 401){
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.remove('token');
-          // 로그인 화면으로 이동
-          appNavigatorKey.currentState?.pushNamedAndRemoveUntil(
-            '/login',
-              (_) => false,
-          );
-        }
         return handler.next(error);
       }
     ),
