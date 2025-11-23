@@ -54,12 +54,10 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ChatPage(
-                    roomNo: r['roomNo'],
+                    roomNo: r['roomNo'],            // ★ 서버에서 보내는 대표 roomNo
                     friendName: r['friendName'],
                     myUserNo: widget.myUserNo,
-
-                    // 🔥 메시지 오면 리스트 갱신
-                    onMessageSent: loadRooms,
+                    onMessageSent: loadRooms,       // ★ 메시지 보내면 리스트 갱신
                   ),
                 ),
               );
