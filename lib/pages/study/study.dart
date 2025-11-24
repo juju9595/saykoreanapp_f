@@ -1,4 +1,4 @@
-// lib/pages/study/study.dart (예시 경로)
+// lib/pages/study/study.dart
 
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -74,11 +74,11 @@ class StudyDto {
 }
 
 class ExamDto {
-  final int examNo; // 예문 번호
+  final int examNo;        // 예문 번호
   final String? examSelected; // 선택된 언어의 예문
-  final String? imagePath; // 이미지 경로
-  final String? koAudioPath; // 한국어 오디오 경로
-  final String? enAudioPath; // 영어 오디오 경로
+  final String? imagePath;    // 이미지 경로
+  final String? koAudioPath;  // 한국어 오디오 경로
+  final String? enAudioPath;  // 영어 오디오 경로
 
   ExamDto({
     required this.examNo,
@@ -88,13 +88,19 @@ class ExamDto {
     this.enAudioPath,
   });
 
-  factory ExamDto.fromJson(Map<String, dynamic> j) => ExamDto(
-    examNo: (j['examNo'] ?? j['id']) as int,
-    examSelected: j['examSelected']?.toString(),
-    imagePath: j['imagePath']?.toString(),
-    koAudioPath: j['koAudioPath']?.toString(),
-    enAudioPath: j['enAudioPath']?.toString(),
-  );
+  factory ExamDto.fromJson(Map<String, dynamic> j) {
+    // examNo가 혹시 String으로 내려와도 안전하게 처리
+    final raw = j['examNo'] ?? j['id'];
+    final examNo = raw is int ? raw : int.tryParse(raw?.toString() ?? '0') ?? 0;
+
+    return ExamDto(
+      examNo: examNo,
+      examSelected: j['examSelected']?.toString(),
+      imagePath: j['imagePath']?.toString(),
+      koAudioPath: j['koAudioPath']?.toString(),
+      enAudioPath: j['enAudioPath']?.toString(),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -132,7 +138,7 @@ class _StudyPageState extends State<StudyPage> {
     super.didChangeDependencies();
     final arg = ModalRoute.of(context)?.settings.arguments;
     if (arg is int && _subject == null) {
-      // 필요하면 사용
+      // 필요 시 사용
     }
   }
 
@@ -169,7 +175,7 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
-  // ── API: 주제 목록 조회 (ApiClient.dio 사용)
+  // ── API: 주제 목록 조회
   Future<void> _fetchSubjects() async {
     try {
       final res = await ApiClient.dio.get(
@@ -266,17 +272,60 @@ class _StudyPageState extends State<StudyPage> {
     }
   }
 
-  // ── 오디오 재생 (ApiClient.getAudioUrl 사용)
+  // ── 오디오 재생
   Future<void> _play(String? path) async {
     if (path == null || path.isEmpty) return;
 
     final resolved = ApiClient.getAudioUrl(path);
+    debugPrint('[Study] play() resolved audio url = $resolved');
 
+    // 1) 먼저 HTTP로 실제로 접근 가능한지 확인 (디버깅/404 확인용)
+    try {
+      final res = await ApiClient.dio.get(
+        resolved,
+        options: Options(
+          responseType: ResponseType.bytes,
+          followRedirects: false,
+          validateStatus: (s) => true, // 404/500도 그대로 통과
+        ),
+      );
+
+      debugPrint('[Study] audio http status = ${res.statusCode}');
+      if (res.statusCode != 200) {
+        debugPrint('[Study] audio not 200, body = ${res.data}');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '오디오 파일을 불러오지 못했어요. (HTTP ${res.statusCode})',
+            ),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('[Study] audio http request error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('오디오 요청 중 오류가 발생했어요: $e'),
+        ),
+      );
+      return;
+    }
+
+    // 2) HTTP 200이면 실제 재생 시도
     try {
       await _player.stop();
       await _player.play(UrlSource(resolved));
     } catch (e) {
-      // 무시
+      debugPrint('[Study] audio play error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('오디오를 재생할 수 없어요: $e'),
+        ),
+      );
     }
   }
 
@@ -301,7 +350,8 @@ class _StudyPageState extends State<StudyPage> {
         '/saykorean/study/complete-point',
       );
       debugPrint(
-          '[Study] complete-point status=${res.statusCode}, data=${res.data}');
+        '[Study] complete-point status=${res.statusCode}, data=${res.data}',
+      );
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -671,6 +721,7 @@ class _ExamCard extends StatelessWidget {
     isDark ? scheme.onPrimaryContainer : const Color(0xFF6B4E42);
 
     final imageUrl = ApiClient.getImageUrl(exam.imagePath);
+    debugPrint('[Study] image url = $imageUrl');
 
     return Container(
       padding: const EdgeInsets.all(14),
