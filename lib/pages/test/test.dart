@@ -517,10 +517,38 @@ class _TestPageState extends State<TestPage> {
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
     // 백엔드와 **동일 규칙**: itemIndex % 3 로 문항 타입 판별
-    final questionType = idx % 3; // 0=그림 객관식, 1=음성 객관식, 2=주관식
-    final isImageQuestion = questionType == 0;
-    final isAudioQuestion = questionType == 1;
-    final isSubjective = questionType == 2;
+    // ✅ 무한/하드모드: 미디어 기반 타입 판별 (주관식은 이미 제외됨)
+    // ✅ 정기시험: 순서 기반 타입 판별
+    final questionType; // 0=그림 객관식, 1=음성 객관식, 2=주관식
+    final isImageQuestion;
+    final isAudioQuestion;
+    final isSubjective;
+
+    if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
+      // 무한/하드모드: 미디어 기반 판별
+      final hasImage = _safeSrc(cur?['imagePath']) != null;
+      final hasAudio = cur?['audios'] is List && (cur!['audios'] as List).isNotEmpty;
+
+      if (hasAudio) {
+        questionType = 1; // 음성 객관식
+      } else if (hasImage) {
+        questionType = 0; // 그림 객관식
+      } else {
+        questionType = 2; // 주관식 (이론상 도달 불가 - 백엔드에서 필터링)
+      }
+
+      isImageQuestion = questionType == 0;
+      isAudioQuestion = questionType == 1;
+      isSubjective = false; // 무한/하드모드는 주관식 없음
+
+    } else {
+      // 정기시험: 순서 기반 판별 (기존 로직)
+      questionType = idx % 3; // 0=그림, 1=음성, 2=주관식
+      isImageQuestion = questionType == 0;
+      isAudioQuestion = questionType == 1;
+      isSubjective = questionType == 2;
+    }
+
     final isMultiple = !isSubjective;
 
     final hasImage = _safeSrc(cur?['imagePath']) != null;
