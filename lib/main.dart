@@ -280,7 +280,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // !!!!!!!!!!!! 앱 시작 전에 SharedPreferences 전체 초기화 !!!!!!!!!!!!!
-  await resetPrefs();
+  // await resetPrefs();
 
   // reCAPTCHA 초기화
   const String androidSiteKey = "6LeHHw8sAAAAAAqE6e3b2hu7w9azw3_3udTKbHcp";
