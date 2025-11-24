@@ -17,7 +17,6 @@ import 'package:saykoreanapp_f/pages/setting/my_info_update_page.dart';
 import 'package:saykoreanapp_f/pages/study/study.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 
-import 'package:saykoreanapp_f/pages/test/testList.dart';
 import 'package:saykoreanapp_f/pages/test/test_mode_page.dart';
 import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:saykoreanapp_f/pages/test/ranking.dart';
@@ -27,6 +26,7 @@ import 'package:saykoreanapp_f/pages/store/store.dart';
 
 import 'package:saykoreanapp_f/pages/chatting/chat_list_wrapper_page.dart';
 import 'package:saykoreanapp_f/pages/chatting/chat_page.dart';
+import 'package:saykoreanapp_f/pages/test/testResult.dart';
 
 // ─────────────────────────────────────────────────────────────
 // 전역 상태
@@ -398,7 +398,8 @@ final Map<String, WidgetBuilder> _routes = {
   "/game": (context) => IfLogin(child: GameListPage()),
   "/study": (context) => IfLogin(child: StudyPage()),
   "/ranking": (context) => IfLogin(child: Ranking()),
-  "loading": (context) => IfLogin(child: LoadingPage()),
+  "/loading": (context) => IfLogin(child: LoadingPage()),
+  "/testresult": (context) => IfLogin(child: TestResultPage()),
   "/chat": (context) => IfLogin(
     child: FutureBuilder(
       future: SharedPreferences.getInstance(),

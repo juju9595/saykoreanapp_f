@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // ApiClient.dio 사용
+import 'package:saykoreanapp_f/main.dart' show setThemeMode, setThemeColor;
 
 class StorePage extends StatefulWidget {
   const StorePage({super.key});
@@ -17,8 +18,8 @@ class _StorePageState extends State<StorePage> {
   String? _error;
 
   int? _pointBalance;          // 내 포인트 잔액
-  bool _hasDarkTheme = false;  // 다크 테마 보유 여부
-  bool _hasMintTheme = false;  // 민트 테마 보유 여부
+  bool _hasDarkTheme = false;  // 다크 테마 보유 여부 (로컬 캐시)
+  bool _hasMintTheme = false;  // 민트 테마 보유 여부 (로컬 캐시)
 
   @override
   void initState() {
@@ -35,7 +36,7 @@ class _StorePageState extends State<StorePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 이미 구매한 적 있는지 체크
+      // 이미 구매한 적 있는지 (로컬에 저장된 플래그)
       _hasDarkTheme = prefs.getBool('hasDarkTheme') ?? false;
       _hasMintTheme = prefs.getBool('hasMintTheme') ?? false;
 
@@ -54,25 +55,30 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 포인트 잔액 조회 (백엔드 엔드포인트에 맞게 수정하면 됨)
-  // 예시: GET /saykorean/point/balance → { "point": 1234 }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 1) 포인트 잔액 조회
+  //   GET /saykorean/store/point
+  //   → 응답: 1234 (int)
+  // ─────────────────────────────────────────────────────────────
   Future<int> _fetchPointBalance() async {
     try {
       final res = await ApiClient.dio.get(
-        '/saykorean/point/balance',
+        '/saykorean/store/point',
         options: Options(validateStatus: (status) => true),
       );
 
+      debugPrint('[Store] point status = ${res.statusCode}, data = ${res.data}');
+
       if (res.statusCode == 200) {
         final data = res.data;
-        if (data is Map && data['point'] != null) {
-          return int.tryParse(data['point'].toString()) ?? 0;
-        } else if (data is int) {
+        if (data is int) {
           return data;
         }
+        if (data is String) {
+          return int.tryParse(data) ?? 0;
+        }
       }
+
       return 0;
     } catch (e) {
       debugPrint('point balance fetch error: $e');
@@ -80,35 +86,85 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 다크 테마 구매 API 호출
-  // 예시: POST /saykorean/store/buy-dark-theme  body: { "itemCode": "DARK_THEME" }
-  // 성공 시: { "success": true, "newPoint": 900 }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 1-1) 테마 적용 (선택된 테마를 로컬에 저장)
+  //   - themeKey 예: 'dark', 'mint', 'default'
+  //   - 실제 앱 전체 테마 변경은 상위(MyApp 등)에서
+  //     SharedPreferences의 selectedTheme를 읽어서 처리
+  // ─────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 1-1) 테마 적용 (전역 themeMode/themeColor 사용)
+  //   - 'dark'  : 다크 모드
+  //   - 'mint'  : 라이트 + 민트 팔레트
+  //   - 'default': 라이트 + 기본(핑크) 팔레트
+  // ─────────────────────────────────────────────────────────────
+  Future<void> _applyTheme(String themeKey) async {
+    switch (themeKey) {
+      case 'dark':
+      // 다크 테마: ThemeMode.dark
+        await setThemeMode(ThemeMode.dark);
+        break;
+      case 'mint':
+      // 민트 테마: 라이트 모드 + 민트 색상
+        await setThemeMode(ThemeMode.light);
+        await setThemeColor('mint');
+        break;
+      default:
+      // 기본 테마: 라이트 모드 + default 색상
+        await setThemeMode(ThemeMode.light);
+        await setThemeColor('default');
+        break;
+    }
+
+    if (!mounted) return;
+
+    String label;
+    switch (themeKey) {
+      case 'dark':
+        label = '다크 테마로 변경했어요.';
+        break;
+      case 'mint':
+        label = '민트 테마로 변경했어요.';
+        break;
+      default:
+        label = '기본 테마로 변경했어요.';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(label)),
+    );
+  }
+
+
+  // ─────────────────────────────────────────────────────────────
+  // 2) 다크 테마 구매 API 호출
+  //
+  //   POST /saykorean/store/theme/1/buy
+  //   응답: { "success": true, "newPoint": 900 }
+  // ─────────────────────────────────────────────────────────────
   Future<bool> _purchaseDarkTheme() async {
     try {
       final res = await ApiClient.dio.post(
-        '/saykorean/store/buy-dark-theme',
-        data: {"itemCode": "DARK_THEME"},
+        '/saykorean/store/theme/1/buy',
         options: Options(validateStatus: (status) => true),
       );
 
-      if (res.statusCode == 200) {
-        final data = res.data;
-        if (data is Map) {
-          final success = data['success'] == true;
-          if (success) {
-            final newPoint = data['newPoint'];
-            if (newPoint != null) {
-              setState(() {
-                _pointBalance =
-                    int.tryParse(newPoint.toString()) ?? _pointBalance;
-              });
-            }
-            return true;
+      debugPrint('[Store] buy dark status = ${res.statusCode}, data = ${res.data}');
+
+      if (res.statusCode == 200 && res.data is Map) {
+        final data = res.data as Map;
+        final success = data['success'] == true;
+        if (success) {
+          final newPoint = data['newPoint'];
+          if (newPoint != null) {
+            setState(() {
+              _pointBalance = int.tryParse(newPoint.toString()) ?? _pointBalance;
+            });
           }
+          return true;
         }
       }
+
       return false;
     } catch (e) {
       debugPrint('purchase dark theme error: $e');
@@ -116,35 +172,35 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 민트 테마 구매 API 호출
-  // 예시: POST /saykorean/store/buy-mint-theme  body: { "itemCode": "MINT_THEME" }
-  // 성공 시: { "success": true, "newPoint": 900 }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 3) 민트 테마 구매 API 호출
+  //
+  //   POST /saykorean/store/theme/2/buy
+  //   응답: { "success": true, "newPoint": 900 }
+  // ─────────────────────────────────────────────────────────────
   Future<bool> _purchaseMintTheme() async {
     try {
       final res = await ApiClient.dio.post(
-        '/saykorean/store/buy-mint-theme',
-        data: {"itemCode": "MINT_THEME"},
+        '/saykorean/store/theme/2/buy',
         options: Options(validateStatus: (status) => true),
       );
 
-      if (res.statusCode == 200) {
-        final data = res.data;
-        if (data is Map) {
-          final success = data['success'] == true;
-          if (success) {
-            final newPoint = data['newPoint'];
-            if (newPoint != null) {
-              setState(() {
-                _pointBalance =
-                    int.tryParse(newPoint.toString()) ?? _pointBalance;
-              });
-            }
-            return true;
+      debugPrint('[Store] buy mint status = ${res.statusCode}, data = ${res.data}');
+
+      if (res.statusCode == 200 && res.data is Map) {
+        final data = res.data as Map;
+        final success = data['success'] == true;
+        if (success) {
+          final newPoint = data['newPoint'];
+          if (newPoint != null) {
+            setState(() {
+              _pointBalance = int.tryParse(newPoint.toString()) ?? _pointBalance;
+            });
           }
+          return true;
         }
       }
+
       return false;
     } catch (e) {
       debugPrint('purchase mint theme error: $e');
@@ -152,13 +208,13 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 다크 테마 구매 버튼 클릭 핸들러
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 4) 다크 테마 구매 버튼 핸들러
+  // ─────────────────────────────────────────────────────────────
   Future<void> _onTapBuyDarkTheme() async {
     if (_pointBalance == null) return;
 
-    const int price = 2000; // 💰 다크 테마 가격 (백엔드와 맞춰야 함)
+    const int price = 2000; // 테마 가격
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,6 +256,7 @@ class _StorePageState extends State<StorePage> {
       return;
     }
 
+    // 로컬 캐시 업데이트
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasDarkTheme', true);
 
@@ -212,13 +269,13 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 민트 테마 구매 버튼 클릭 핸들러
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 5) 민트 테마 구매 버튼 핸들러
+  // ─────────────────────────────────────────────────────────────
   Future<void> _onTapBuyMintTheme() async {
     if (_pointBalance == null) return;
 
-    const int price = 2000; // 💰 민트 테마 가격 (백엔드와 맞추기)
+    const int price = 2000;
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -421,7 +478,8 @@ class _StorePageState extends State<StorePage> {
   Widget _buildDarkThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     const int price = 2000;
-    final bool disabled = _hasDarkTheme || (_pointBalance ?? 0) < price;
+    final bool owned = _hasDarkTheme;
+    final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
     final titleColor =
     isDark ? scheme.onSurface : const Color(0xFF111827);
@@ -569,14 +627,18 @@ class _StorePageState extends State<StorePage> {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: disabled ? null : _onTapBuyDarkTheme,
+              onPressed: disabled
+                  ? null
+                  : (owned
+                  ? () => _applyTheme('dark')   // 이미 보유 → 테마 변경
+                  : _onTapBuyDarkTheme),        // 미보유 → 구매
               style: ElevatedButton.styleFrom(
-                backgroundColor: _hasDarkTheme
+                backgroundColor: owned
                     ? (isDark
                     ? scheme.primaryContainer
                     : const Color(0xFFD1FAE5))
                     : const Color(0xFFFFEEE9),
-                foregroundColor: _hasDarkTheme
+                foregroundColor: owned
                     ? (isDark
                     ? scheme.onPrimaryContainer
                     : const Color(0xFF047857))
@@ -589,8 +651,8 @@ class _StorePageState extends State<StorePage> {
                 ),
               ),
               child: Text(
-                _hasDarkTheme
-                    ? '구매완료'
+                owned
+                    ? '테마 변경'
                     : (_pointBalance != null && _pointBalance! < price
                     ? '포인트 부족'
                     : '구매'),
@@ -608,7 +670,8 @@ class _StorePageState extends State<StorePage> {
   Widget _buildMintThemeItem(
       ThemeData theme, ColorScheme scheme, bool isDark) {
     const int price = 2000;
-    final bool disabled = _hasMintTheme || (_pointBalance ?? 0) < price;
+    final bool owned = _hasMintTheme;
+    final bool disabled = !owned && (_pointBalance ?? 0) < price;
 
     final titleColor =
     isDark ? scheme.onSurface : const Color(0xFF064E3B);
@@ -746,15 +809,21 @@ class _StorePageState extends State<StorePage> {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: disabled ? null : _onTapBuyMintTheme,
+              onPressed: disabled
+                  ? null
+                  : (owned
+                  ? () => _applyTheme('mint')
+                  : _onTapBuyMintTheme),
               style: ElevatedButton.styleFrom(
-                backgroundColor: _hasMintTheme
+                backgroundColor: owned
                     ? (isDark
                     ? const Color(0xFF064E3B)
                     : const Color(0xFFD1FAE5))
                     : const Color(0xFFE0FFF5),
-                foregroundColor: _hasMintTheme
-                    ? (isDark ? Colors.white : const Color(0xFF047857))
+                foregroundColor: owned
+                    ? (isDark
+                    ? Colors.white
+                    : const Color(0xFF047857))
                     : const Color(0xFF064E3B),
                 elevation: 0,
                 padding:
@@ -764,8 +833,8 @@ class _StorePageState extends State<StorePage> {
                 ),
               ),
               child: Text(
-                _hasMintTheme
-                    ? '구매완료'
+                owned
+                    ? '테마 변경'
                     : (_pointBalance != null && _pointBalance! < price
                     ? '포인트 부족'
                     : '구매'),
