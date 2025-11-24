@@ -1,20 +1,32 @@
 // main.dart
 import 'package:flutter/material.dart';
-import 'package:saykoreanapp_f/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:saykoreanapp_f/main.dart';
 
-/// 앱 전체에서 쓰는 전역 테마 상태
+// ------------------------------
+// 전역 테마 상태
+// ------------------------------
+
+// light / dark / system
 final ValueNotifier<ThemeMode> themeModeNotifier =
 ValueNotifier<ThemeMode>(ThemeMode.system);
 
+// light / dark / mint (커스텀 색 테마용)
+final ValueNotifier<String> customThemeNotifier =
+ValueNotifier<String>("light");
+
+// ------------------------------
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 저장된 테마 불러오기 (system / light / dark)
   final prefs = await SharedPreferences.getInstance();
-  final saved = prefs.getString('themeMode');
-  if (saved != null) {
-    switch (saved) {
+
+  // ------------------------------
+  // 저장된 기본 light/dark/system 불러오기
+  // ------------------------------
+  final savedMode = prefs.getString('themeMode'); // system/light/dark
+  if (savedMode != null) {
+    switch (savedMode) {
       case 'light':
         themeModeNotifier.value = ThemeMode.light;
         break;
@@ -28,5 +40,14 @@ Future<void> main() async {
     }
   }
 
-  runApp( MyApp() );
+  // ------------------------------
+  // 저장된 customTheme(light/dark/mint) 불러오기
+  // ------------------------------
+  final savedCustomTheme = prefs.getString('customTheme');
+  if (savedCustomTheme != null) {
+    // 필요하면 여기서 값 검증해도 됨 (예: ['light','dark','mint'] 안에 있을 때만 대입)
+    customThemeNotifier.value = savedCustomTheme;
+  }
+
+  runApp(MyApp());
 }

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:recaptcha_enterprise_flutter/recaptcha_client.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/my_info_update_page.dart';
@@ -9,7 +8,7 @@ import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// themeModeNotifier 가 정의된 파일 import (예: main.dart)
+// themeModeNotifier, app 전역 정의된 main.dart import
 import 'package:saykoreanapp_f/main.dart';
 
 class MyPage extends StatefulWidget {
@@ -24,16 +23,18 @@ class MyPage extends StatefulWidget {
 class _MyPageState extends State<MyPage> {
   final dio = Dio();
 
-  // 1. 상태변수
+  // 상태값
   String nickName = "";
   String userDate = "";
-  dynamic attendDay = null;
-  dynamic MaxStreak = null;
+  dynamic attendDay;
+  dynamic maxStreak;
   bool isLoading = true;
 
-  bool _isDark = false; // 다크 모드 여부
+  bool _isDark = false; // 다크 모드 스위치
+  bool _isMint = false; // 민트 모드 스위치
 
-  // 2. 해당 페이지 열렸을때 실행되는 함수
+  bool? isLogin;
+
   @override
   void initState() {
     super.initState();
@@ -41,47 +42,75 @@ class _MyPageState extends State<MyPage> {
     loginCheck();
   }
 
-  void _initThemeFromGlobal() {
-    final mode = themeModeNotifier.value;
+  Future<void> _initThemeFromGlobal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMode = prefs.getString('themeMode'); // light/dark/system
+    final savedColor = prefs.getString('themeColor'); // default/mint
+
     setState(() {
-      _isDark = (mode == ThemeMode.dark);
+      _isDark = (savedMode == 'dark');
+      _isMint = (savedColor == 'mint');
     });
   }
 
-  Future<void> _toggleTheme(bool value) async {
+  Future<void> _toggleDark(bool value) async {
     setState(() {
       _isDark = value;
+      if (value) {
+        _isMint = false; // 다크 켜면 민트 OFF
+      }
     });
 
-    // 전역 테마 변경 → 전체 앱 테마 변경
-    themeModeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
-
-    // (옵션) SharedPreferences에 저장해서 앱 재실행 후에도 유지하고 싶으면:
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.setString('themeMode', value ? 'dark' : 'light');
-  }
-
-  // 3. 로그인 상태를 확인하는 함수
-  bool? isLogin; // Dart 문법 중에 타입? 은 null 포함할 수 있다는 뜻
-  void loginCheck() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-    if (token != null && token.isNotEmpty) {
-      setState(() {
-        isLogin = true;
-        print("로그인 중");
-        onInfo(token);
-        findAttend();
-      });
+    if (value) {
+      // 다크 모드 ON
+      await setThemeMode(ThemeMode.dark); // main.dart 전역 함수
+      await setThemeColor('default'); // 다크일 때는 민트 색상 OFF
     } else {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
+      // 다크 모드 OFF → 라이트 모드
+      await setThemeMode(ThemeMode.light);
     }
   }
 
-  // 4. 로그인된 (회원) 정보 요청, 로그인 중일때 실행
+  Future<void> _toggleMint(bool value) async {
+    setState(() {
+      _isMint = value;
+      if (value) {
+        _isDark = false; // 민트 켜면 다크 OFF
+      }
+    });
+
+    if (value) {
+      // 민트 ON → 라이트 + 민트 색상
+      await setThemeMode(ThemeMode.light);
+      await setThemeColor('mint');
+    } else {
+      // 민트 OFF → 기본 라이트 색상
+      await setThemeColor('default');
+    }
+  }
+
+  // 로그인 상태 확인
+  void loginCheck() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token != null && token.isNotEmpty) {
+      setState(() {
+        isLogin = true;
+      });
+      onInfo(token);
+      findAttend();
+    } else {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      }
+    }
+  }
+
+  // 회원 정보 요청
   void onInfo(token) async {
     try {
       final response = await ApiClient.dio.get(
@@ -91,18 +120,13 @@ class _MyPageState extends State<MyPage> {
         ),
       );
 
-      print("응답 상태: ${response.statusCode}");
-      print("응답 데이터: ${response.data}");
-
       if (response.statusCode == 200 && response.data != null) {
         setState(() {
           nickName = response.data['nickName'] ?? '';
           userDate = response.data['userDate'] ?? '';
-
           isLoading = false;
         });
       } else if (response.statusCode == 400) {
-        print("인증 실패 - 로그인 페이지로 이동");
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -110,7 +134,6 @@ class _MyPageState extends State<MyPage> {
           );
         }
       } else {
-        print("기타 오류 : ${response.statusCode}");
         setState(() {
           nickName = "정보 로드 실패";
           userDate = "API 오류";
@@ -128,40 +151,86 @@ class _MyPageState extends State<MyPage> {
     }
   }
 
-  // 출석 일수 조회 메소드
+  // 출석 조회 메소드
   void findAttend() async {
-    try{
+    try {
       final response = await ApiClient.dio.get(
-          '/saykorean/attend',
-      options: Options(
-        validateStatus: (status) => true
-        ),
+        '/saykorean/attend',
+        options: Options(validateStatus: (status) => true),
       );
-      if (response.statusCode == 200 && response.data != null ){
+
+      if (response.statusCode == 200 && response.data != null) {
         List<dynamic> attendList = response.data;
+        print("출석 리스트: $attendList");
+
+        int calculatedCurrentStreak = 0;
+
+        if (attendList.isNotEmpty) {
+          // 날짜만 추출하고 정렬 (최신순)
+          final dates = attendList
+              .map((item) => DateTime.parse(item['attendDay']))
+              .toList()
+            ..sort((a, b) => b.compareTo(a)); // 내림차순 정렬 (최신날짜가 앞에)
+
+          final today = DateTime.now();
+          final todayDate = DateTime(today.year, today.month, today.day);
+
+          // 가장 최근 출석일
+          final lastAttendDate = DateTime(
+              dates[0].year,
+              dates[0].month,
+              dates[0].day
+          );
+
+          // 마지막 출석이 오늘이거나 어제인 경우에만 연속 계산
+          final daysSinceLastAttend = todayDate.difference(lastAttendDate).inDays;
+
+          if (daysSinceLastAttend <= 1) {
+            calculatedCurrentStreak = 1;
+
+            // 역순으로 현재 연속 출석일 계산
+            for (int i = 1; i < dates.length; i++) {
+              final currentDate = DateTime(dates[i].year, dates[i].month, dates[i].day);
+              final prevDate = DateTime(dates[i - 1].year, dates[i - 1].month, dates[i - 1].day);
+
+              final diffDays = prevDate.difference(currentDate).inDays;
+
+              if (diffDays == 1) {
+                calculatedCurrentStreak += 1;
+              } else {
+                break; // 연속이 끊기면 중단
+              }
+            }
+          } else {
+            // 오늘/어제 출석하지 않았으면 연속 0
+            calculatedCurrentStreak = 0;
+          }
+        }
 
         setState(() {
           attendDay = attendList.length;
-
-
+          maxStreak = calculatedCurrentStreak; // 현재 연속 출석일수
         });
-      }
 
-    }catch(e){print(e);}
+        print("현재 연속 출석일수: $calculatedCurrentStreak");
+      }
+    } catch (e) {
+      print("출석 조회 오류: $e");
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     const brown = Color(0xFF6B4E42);
     final bg = Theme.of(context).scaffoldBackgroundColor;
 
-    // 로딩 중일 때
     if (isLoading) {
-      return Scaffold(
-        backgroundColor: bg,
-        body: const Center(
+      return const Scaffold(
+        backgroundColor: Color(0xFFFFF9F0),
+        body: Center(
           child: CircularProgressIndicator(
-            // 색은 고정 브라운 유지
             color: brown,
           ),
         ),
@@ -189,7 +258,7 @@ class _MyPageState extends State<MyPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 상단 인사/타이틀 영역
+              // 상단 타이틀
               const Text(
                 "내 계정",
                 style: TextStyle(
@@ -208,126 +277,12 @@ class _MyPageState extends State<MyPage> {
               ),
               const SizedBox(height: 20),
 
-              // 사용자 정보 표시 카드
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.brown.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 닉네임
-                    Row(
-                      children: const [
-                        Icon(Icons.person, color: brown, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          "닉네임",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF9C7C68),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      nickName.isNotEmpty ? nickName : "정보 없음",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: brown,
-                      ),
-                    ),
-
-                    // 가입일자
-                    const SizedBox(height: 16),
-                    Row(
-                      children: const [
-                        Icon(Icons.calendar_today, color: brown, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          "가입일자",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF9C7C68),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      userDate.isNotEmpty ? userDate : "정보 없음",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: brown,
-                      ),
-                    ),const SizedBox(height: 16),
-
-                    // TODO 총 출석 일수
-                    Row(
-                      children: const [
-                        Icon(Icons.calendar_today, color: brown, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          "총 출석 일수",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF9C7C68),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      attendDay == null ? "${attendDay}일" : "정보 없음",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: brown,
-                      ),
-                    ),const SizedBox(height: 16),
-
-                    // TODO 현재 연속 출석 일수
-                    Row(
-                      children: const [
-                        Icon(Icons.calendar_today, color: brown, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          "현재 연속 출석 일수",
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF9C7C68),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      MaxStreak == null ? "${MaxStreak}일" : "정보 없음",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: brown,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // 사용자 정보 카드
+              _buildUserCard(),
 
               const SizedBox(height: 24),
 
-              // 1. 계정 설정 카드
+              // 계정 설정
               const _SectionTitle("계정 설정"),
               const SizedBox(height: 8),
               _SettingCard(
@@ -346,7 +301,7 @@ class _MyPageState extends State<MyPage> {
 
               const SizedBox(height: 24),
 
-              // 2. 학습 설정 카드들
+              // 학습 설정
               const _SectionTitle("학습 설정"),
               const SizedBox(height: 8),
               _SettingCard(
@@ -379,74 +334,8 @@ class _MyPageState extends State<MyPage> {
 
               const SizedBox(height: 24),
 
-              // 앱 설정 - 다크 모드
-              const _SectionTitle("앱 설정"),
-              const SizedBox(height: 8),
-              Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.brown.withOpacity(0.08),
-                      blurRadius: 12,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFE5CF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _isDark ? Icons.dark_mode : Icons.light_mode,
-                        color: brown,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "다크 모드",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: brown,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "눈에 편한 어두운 테마로 전환해요.",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF9C7C68),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _isDark,
-                      activeColor: brown,
-                      onChanged: _toggleTheme,
-                    ),
-                  ],
-                ),
-              ),
 
-              const SizedBox(height: 24),
-
-              // 3. 학습 기록 / 완수 목록
+              // 학습 기록
               const _SectionTitle("학습 기록"),
               const SizedBox(height: 8),
               _SettingCard(
@@ -470,6 +359,132 @@ class _MyPageState extends State<MyPage> {
       ),
     );
   }
+
+  // ------------------- 위젯 조각들 ------------------- //
+  Widget _buildUserCard() {
+    const brown = Color(0xFF6B4E42);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.brown.withOpacity(0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 닉네임
+          Row(
+            children: const [
+              Icon(Icons.person, color: brown, size: 20),
+              SizedBox(width: 8),
+              Text(
+                "닉네임",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF9C7C68),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            nickName.isNotEmpty ? nickName : "정보 없음",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: brown,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // 가입일자
+          Row(
+            children: const [
+              Icon(Icons.calendar_today, color: brown, size: 20),
+              SizedBox(width: 8),
+              Text(
+                "가입일자",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF9C7C68),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            userDate.isNotEmpty ? userDate : "정보 없음",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: brown,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // 총 출석 일수
+          Row(
+            children: const [
+              Icon(Icons.calendar_month, color: brown, size: 20),
+              SizedBox(width: 8),
+              Text(
+                "총 출석 일수",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF9C7C68),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            attendDay != null ? "${attendDay}일" : "정보 없음",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: brown,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // 현재 연속 출석 일수 (아직 null이라 임시)
+          Row(
+            children: const [
+              Icon(Icons.trending_up, color: brown, size: 20),
+              SizedBox(width: 8),
+              Text(
+                "현재 연속 출석 일수",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Color(0xFF9C7C68),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            maxStreak != null ? "${maxStreak}일" : "정보 없음",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: brown,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -478,13 +493,13 @@ class _MyPageState extends State<MyPage> {
 
 class _SectionTitle extends StatelessWidget {
   final String text;
-  const _SectionTitle(this.text);
+  const _SectionTitle(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 13,
         color: Color(0xFF9C7C68),
       ),
@@ -499,6 +514,7 @@ class _SettingCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _SettingCard({
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -508,6 +524,7 @@ class _SettingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const brown = Color(0xFF6B4E42);
+    final scheme = Theme.of(context).colorScheme;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -527,14 +544,19 @@ class _SettingCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // 아이콘 네모
             Container(
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFFFFE5CF),
+                color: scheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: brown, size: 22),
+              child: Icon(
+                icon,
+                color: scheme.onSecondaryContainer,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -563,7 +585,7 @@ class _SettingCard extends StatelessWidget {
             const Icon(
               Icons.chevron_right_rounded,
               color: Color(0xFFB89C8A),
-            )
+            ),
           ],
         ),
       ),

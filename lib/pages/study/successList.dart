@@ -1,6 +1,9 @@
+// lib/pages/study/successList.dart
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'study.dart'; // ← 경로는 프로젝트 구조에 맞게 수정
+import 'package:saykoreanapp_f/api/api.dart';   // 추가
+import 'study.dart'; // StudyDto 사용
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 학습 완료한 주제 목록 페이지
@@ -78,7 +81,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
 
   Future<StudyDto?> _fetchStudyDetail(int studyNo) async {
     try {
-      final res = await dio.get(
+      final res = await ApiClient.dio.get(      // dio -> ApiClient.dio
         '/saykorean/study/getDailyStudy',
         queryParameters: {
           'studyNo': studyNo,
@@ -108,25 +111,25 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
   @override
   Widget build(BuildContext context) {
     const brown = Color(0xFF6B4E42);
-    final bg = Theme.of(context).scaffoldBackgroundColor; // 🔥 테마 기반 배경
+    final bg = Theme.of(context).scaffoldBackgroundColor; // 테마 기반 배경
 
     return Scaffold(
-      backgroundColor: bg, // 🔥
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text('완수한 주제 목록'),
-        backgroundColor: bg, // 🔥
+        backgroundColor: bg,
         elevation: 0,
         foregroundColor: brown,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: _buildBody(context), // 🔥 context 넘겨줌
+        child: _buildBody(context),
       ),
     );
   }
 
   // 로딩/에러/데이터 유무에 따라 다른 UI
-  Widget _buildBody(BuildContext context) { // 🔥 context 받기
+  Widget _buildBody(BuildContext context) {
     // 1) 로딩 중
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -161,24 +164,22 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
     }
 
     // 4) 정상적으로 목록이 있는 경우에는 리스트 출력
-    final cardColor = Theme.of(context).cardColor; // 🔥 다크/라이트 공통 카드색
+    final cardColor = Theme.of(context).cardColor; // 다크/라이트 공통 카드색
 
     return ListView.separated(
       itemCount: _studies.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final s = _studies[index];
-        // 백엔드에서 내려주는 선택된 언어 제목 -> 한국어 제목 -> fallback
-        final title = s.themeSelected ??
-            s.themeKo ??
-            '주제 #${s.studyNo}'; // React 의 fallback 과 동일
+        final title =
+            s.themeSelected ?? s.themeKo ?? '주제 #${s.studyNo}';
 
         return SizedBox(
           height: 48,
           child: ElevatedButton(
             onPressed: () => _onTapStudy(s),
             style: ElevatedButton.styleFrom(
-              backgroundColor: cardColor,              // 🔥 카드색 사용
+              backgroundColor: cardColor,
               foregroundColor: const Color(0xFF6B4E42),
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -190,7 +191,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
               alignment: Alignment.centerLeft,
               child: Text(
                 title,
-                overflow: TextOverflow.ellipsis, // 긴 제목은 ...처리
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
