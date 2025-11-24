@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage> {
                       icon: Icons.storefront_outlined,
                       label: '스토어',
                       onTap: () {
-                        Navigator.pushNamed(context, '/ranking');
+                        Navigator.pushNamed(context, '/store');
                       },
                     ),
                     const SizedBox(width: 8),

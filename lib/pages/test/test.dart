@@ -245,7 +245,9 @@ class _TestPageState extends State<TestPage> {
 
   // 문자열 안전 체크
   String? _safeSrc(dynamic s) {
-    if (s is String && s.trim().isNotEmpty) return s;
+    if (s is String && s
+        .trim()
+        .isNotEmpty) return s;
     return null;
   }
 
@@ -434,23 +436,24 @@ class _TestPageState extends State<TestPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("게임 오버"),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
-              : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // 다이얼로그 닫기
-              Navigator.pop(context); // 시험페이지 닫기
-            },
-            child: const Text("확인"),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("게임 오버"),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
+                  : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // 다이얼로그 닫기
+                  Navigator.pop(context); // 시험페이지 닫기
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -459,32 +462,41 @@ class _TestPageState extends State<TestPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("🎉 완벽합니다!"),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
-              : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text("확인"),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("🎉 완벽합니다!"),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
+                  : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
   // ─────────────────────────────────────────────────────────────
+  // 빌드
+  // ─────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    const cream = Color(0xFFFFF9F0);
-    const brown = Color(0xFF6B4E42);
-    final screenWidth = MediaQuery.of(context).size.width;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final bg = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
 
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
@@ -501,21 +513,31 @@ class _TestPageState extends State<TestPage> {
     print("🔍 문항 타입: idx=$idx, type=$questionType, "
         "image=$hasImage, audio=$hasAudio, subj=$isSubjective");
 
+    // 톤 정리
+    final titleColor = scheme.primary; // 민트/브라운 메인 색
+    final subtitleColor = scheme.onSurface.withOpacity(0.7);
+    final progressColor = scheme.onSurface.withOpacity(0.8);
+    final cardColor = isDark ? scheme.surface : Colors.white;
+    final cardBorderColor =
+    isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB);
+    final nextButtonBg = scheme.primaryContainer;
+    final nextButtonFg = scheme.onPrimaryContainer;
+
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: bg,
       appBar: AppBar(
-        backgroundColor: cream,
+        backgroundColor: bg,
         elevation: 0,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: brown),
+        iconTheme: IconThemeData(color: titleColor),
         title: Text(
           widget.testMode == "INFINITE"
               ? '♾️ 무한모드'
               : widget.testMode == "HARD"
               ? '🔥 하드모드'
               : '📝 정기시험',
-          style: const TextStyle(
-            color: brown,
+          style: TextStyle(
+            color: titleColor,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -526,27 +548,26 @@ class _TestPageState extends State<TestPage> {
           ? Center(
         child: Text(
           msg.isEmpty ? "문항이 없습니다." : msg,
-          style: const TextStyle(color: Colors.grey),
+          style: TextStyle(color: subtitleColor),
         ),
       )
           : SafeArea(
         child: SingleChildScrollView(
-          padding:
-          const EdgeInsets.fromLTRB(20, 10, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
           child: Column(
-            crossAxisAlignment:
-            CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 상단 타이틀
               Text(
                 widget.testMode == "INFINITE"
                     ? "♾️ 무한모드"
                     : widget.testMode == "HARD"
                     ? "🔥 하드모드"
                     : "📝 오늘의 시험",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: brown,
+                  color: titleColor,
                 ),
               ),
               const SizedBox(height: 6),
@@ -555,9 +576,9 @@ class _TestPageState extends State<TestPage> {
                     widget.testMode == "HARD"
                     ? "틀릴 때까지 계속 도전해요!"
                     : "문제를 풀고 자신의 실력을 확인해 보아요.",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF9C7C68),
+                  color: subtitleColor,
                 ),
               ),
               const SizedBox(height: 18),
@@ -565,10 +586,10 @@ class _TestPageState extends State<TestPage> {
               // 진행도
               Text(
                 "${idx + 1} / ${items.length}",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF7C5A48),
+                  color: progressColor,
                 ),
               ),
               const SizedBox(height: 8),
@@ -577,59 +598,51 @@ class _TestPageState extends State<TestPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: const Color(0xFFE5E7EB),
-                  ),
-                  borderRadius:
-                  BorderRadius.circular(16),
-                  boxShadow: [
+                  color: cardColor,
+                  border: Border.all(color: cardBorderColor),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: isDark
+                      ? const []
+                      : [
                     BoxShadow(
-                      color: Colors.brown
-                          .withOpacity(0.06),
+                      color:
+                      Colors.brown.withOpacity(0.06),
                       blurRadius: 10,
-                      offset:
-                      const Offset(0, 5),
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // 질문 텍스트
                     Text(
                       cur?['questionSelected'] ?? "",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
-                        color: Color(0xFF3F3F46),
+                        color: scheme.onSurface,
                       ),
-                      textAlign:
-                      TextAlign.center,
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
 
                     // 그림
                     if (isImageQuestion && hasImage)
                       ClipRRect(
-                        borderRadius:
-                        BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
-                          width:
-                          screenWidth * 0.8,
+                          width: screenWidth * 0.8,
                           child: AspectRatio(
                             aspectRatio: 3 / 3,
                             child: Image.network(
                               ApiClient.buildUrl(
-                                _safeSrc(cur![
-                                'imagePath'])!,
+                                _safeSrc(cur!['imagePath'])!,
                               ),
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __,
-                                  ___) =>
+                              errorBuilder: (_, __, ___) =>
                               const Center(
-                                child: Text(
-                                    '이미지를 불러올 수 없어요'),
+                                child:
+                                Text('이미지를 불러올 수 없어요'),
                               ),
                             ),
                           ),
@@ -637,41 +650,30 @@ class _TestPageState extends State<TestPage> {
                       ),
 
                     // 오디오
-                    if (isAudioQuestion &&
-                        hasAudio)
+                    if (isAudioQuestion && hasAudio)
                       Column(
                         children: [
                           for (final audio
-                          in (cur!['audios']
-                          as List))
-                            if (_safeSrc(audio[
-                            'audioPath']) !=
+                          in (cur!['audios'] as List))
+                            if (_safeSrc(audio['audioPath']) !=
                                 null)
                               Padding(
-                                padding:
-                                const EdgeInsets
-                                    .symmetric(
-                                  vertical: 6.0,
-                                ),
-                                child:
-                                OutlinedButton
-                                    .icon(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6.0),
+                                child: OutlinedButton.icon(
                                   onPressed: () {
-                                    _playAudio(audio[
-                                    'audioPath']);
+                                    _playAudio(
+                                        audio['audioPath']);
                                   },
-                                  icon: const Text(
-                                      '🔊'),
-                                  label: const Text(
-                                      '음성 듣기'),
-                                  style: OutlinedButton
-                                      .styleFrom(
+                                  icon: const Text('🔊'),
+                                  label:
+                                  const Text('음성 듣기'),
+                                  style:
+                                  OutlinedButton.styleFrom(
                                     foregroundColor:
-                                    brown,
-                                    side:
-                                    const BorderSide(
-                                      color: Color(
-                                          0xFFE5D5CC),
+                                    titleColor,
+                                    side: BorderSide(
+                                      color: cardBorderColor,
                                     ),
                                   ),
                                 ),
@@ -681,30 +683,23 @@ class _TestPageState extends State<TestPage> {
 
                     // 주관식 예문
                     if (isSubjective &&
-                        cur?['examSelected'] !=
-                            null)
+                        cur?['examSelected'] != null)
                       Container(
                         margin:
-                        const EdgeInsets
-                            .only(top: 10),
-                        padding:
-                        const EdgeInsets
-                            .all(12),
-                        decoration:
-                        BoxDecoration(
-                          color:
-                          const Color(
-                              0xFFF9FAFB),
+                        const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: scheme.surfaceVariant
+                              .withOpacity(
+                              isDark ? 0.6 : 0.4),
                           borderRadius:
-                          BorderRadius
-                              .circular(10),
+                          BorderRadius.circular(10),
                         ),
                         child: Text(
                           cur!['examSelected'],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
-                            color: Color(
-                                0xFF4B5563),
+                            color: scheme.onSurface,
                           ),
                         ),
                       ),
@@ -726,66 +721,45 @@ class _TestPageState extends State<TestPage> {
               if (feedback != null)
                 Column(
                   crossAxisAlignment:
-                  CrossAxisAlignment
-                      .stretch,
+                  CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      padding:
-                      const EdgeInsets
-                          .all(14),
-                      decoration:
-                      BoxDecoration(
-                        color: feedback![
-                        'correct']
-                            ? Colors.green
-                            .shade100
-                            : Colors.red
-                            .shade100,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: feedback!['correct']
+                            ? Colors.green.shade100
+                            : Colors.red.shade100,
                         borderRadius:
-                        BorderRadius
-                            .circular(12),
+                        BorderRadius.circular(12),
                       ),
                       child: Text(
                         feedback!['correct']
                             ? "정답입니다!"
                             : "틀렸어요 😢",
                         style: TextStyle(
-                          color: feedback![
-                          'correct']
-                              ? Colors.green
-                              .shade900
-                              : Colors.red
-                              .shade900,
-                          fontWeight:
-                          FontWeight
-                              .bold,
+                          color: feedback!['correct']
+                              ? Colors.green.shade900
+                              : Colors.red.shade900,
+                          fontWeight: FontWeight.bold,
                         ),
-                        textAlign:
-                        TextAlign
-                            .center,
+                        textAlign: TextAlign.center,
                       ),
                     ),
-                    const SizedBox(
-                        height: 10),
+                    const SizedBox(height: 10),
                     SizedBox(
                       height: 48,
-                      child:
-                      ElevatedButton(
-                        onPressed:
-                        goNext,
-                        style: ElevatedButton
-                            .styleFrom(
+                      child: ElevatedButton(
+                        onPressed: goNext,
+                        style:
+                        ElevatedButton.styleFrom(
                           backgroundColor:
-                          const Color(
-                              0xFFFFEEE9),
+                          nextButtonBg,
                           foregroundColor:
-                          brown,
+                          nextButtonFg,
                           elevation: 0,
                         ),
                         child: Text(
-                          idx <
-                              items.length -
-                                  1
+                          idx < items.length - 1
                               ? "다음 문제"
                               : "결과 보기",
                         ),
@@ -800,9 +774,12 @@ class _TestPageState extends State<TestPage> {
     );
   }
 
+
   // ─────────────────────────────────────────────────────────────
   Widget _buildMultipleChoice(Map<String, dynamic>? cur) {
-    const titleColor = Color(0xFF7C5A48);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final titleColor = scheme.primary;
 
     final options = cur?['options'];
     final hasOptions =
@@ -818,7 +795,7 @@ class _TestPageState extends State<TestPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           "정답을 골라보세요",
           style: TextStyle(
             fontSize: 15,
@@ -833,19 +810,18 @@ class _TestPageState extends State<TestPage> {
             runSpacing: 8,
             children:
             (options as List).map<Widget>((opt) {
-              final map =
-              opt as Map<String, dynamic>;
-              final label =
-                  map['examSelected'] ??
-                      map['examKo'] ??
-                      "보기 로드 실패";
+              final map = opt as Map<String, dynamic>;
+              final label = map['examSelected'] ??
+                  map['examKo'] ??
+                  "보기 로드 실패";
               return _ChoiceButton(
                 label: label.toString(),
                 onTap: feedback == null
-                    ? () => submitAnswer(
-                  selectedExamNo:
-                  _toInt(map['examNo']),
-                )
+                    ? () =>
+                    submitAnswer(
+                      selectedExamNo:
+                      _toInt(map['examNo']),
+                    )
                     : null,
               );
             }).toList(),
@@ -856,15 +832,18 @@ class _TestPageState extends State<TestPage> {
     );
   }
 
+
   Widget _buildSubjective() {
-    const titleColor = Color(0xFF7C5A48);
-    const brown = Color(0xFF6B4E42);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final titleColor = scheme.primary;
+    final buttonBg = scheme.primaryContainer;
+    final buttonFg = scheme.onPrimaryContainer;
 
     return Column(
-      crossAxisAlignment:
-      CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
+        Text(
           "한국어로 답을 입력해 보세요",
           style: TextStyle(
             fontSize: 15,
@@ -882,28 +861,34 @@ class _TestPageState extends State<TestPage> {
               subjective = v;
             });
           },
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             hintText: "한국어로 답변을 작성하세요",
-            border: OutlineInputBorder(),
+            border: const OutlineInputBorder(),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: scheme.primary,
+                width: 1.5,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 10),
         SizedBox(
           height: 44,
           child: ElevatedButton(
-            onPressed:
-            (subjective.trim().isEmpty ||
+            onPressed: (subjective
+                .trim()
+                .isEmpty ||
                 submitting)
                 ? null
                 : () => submitAnswer(),
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-              const Color(0xFFFFEEE9),
-              foregroundColor: brown,
+              backgroundColor: buttonBg,
+              foregroundColor: buttonFg,
               elevation: 0,
             ),
-            child: Text(
-                submitting ? "로딩 중..." : "제출"),
+            child:
+            Text(submitting ? "로딩 중..." : "제출"),
           ),
         ),
       ],
@@ -911,6 +896,7 @@ class _TestPageState extends State<TestPage> {
   }
 }
 
+// 선택지 pill 버튼
 // 선택지 pill 버튼
 class _ChoiceButton extends StatelessWidget {
   final String label;
@@ -922,26 +908,31 @@ class _ChoiceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const borderColor = Color(0xFF2F7A69);
-    const textColor = Color(0xFF2F7A69);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    final borderColor = scheme.primary;
+    final textColor = scheme.primary;
+    final bg = theme.brightness == Brightness.dark
+        ? scheme.surface
+        : Colors.white;
 
     return InkWell(
       onTap: onTap,
-      borderRadius:
-      BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(
-            vertical: 10, horizontal: 16),
+          vertical: 10,
+          horizontal: 16,
+        ),
         decoration: BoxDecoration(
-          color: Colors.white,
-          border:
-          Border.all(color: borderColor),
-          borderRadius:
-          BorderRadius.circular(999),
+          color: bg,
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: textColor,
             fontSize: 14,
           ),
