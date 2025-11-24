@@ -31,6 +31,8 @@ import 'package:saykoreanapp_f/pages/test/testResult.dart';
 
 import 'package:saykoreanapp_f/api/resetPrefs.dart';
 
+import 'package:easy_localization/easy_localization.dart';
+
 // ─────────────────────────────────────────────────────────────
 // 전역 상태
 // ─────────────────────────────────────────────────────────────
@@ -279,7 +281,7 @@ ThemeData _darkTheme() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // !!!!!!!!!!!! 앱 시작 전에 SharedPreferences 전체 초기화 !!!!!!!!!!!!!
+  // // !!!!!!!!!!!! 앱 시작 전에 SharedPreferences 전체 초기화 !!!!!!!!!!!!!
   // await resetPrefs();
 
   // reCAPTCHA 초기화
@@ -302,7 +304,23 @@ void main() async {
     themeColorNotifier.value = savedThemeColor;
   }
 
-  runApp(MyApp());
+  // 🌍 다국어 초기화
+  await EasyLocalization.ensureInitialized();
+
+  runApp(
+    EasyLocalization(
+      supportedLocales: const [
+        Locale('ko'),
+        Locale('en'),
+        Locale('ja'),
+        Locale('es'),
+        Locale('zh', 'CN'),
+      ],
+      path: 'assets/i18n', // ← JSON 폴더 경로
+      fallbackLocale: const Locale('ko'),
+      child: MyApp(),      // ← 여기 감싸야 함
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -326,6 +344,12 @@ class MyApp extends StatelessWidget {
               debugShowCheckedModeBanner: false,
               navigatorKey: appNavigatorKey,
               initialRoute: "/",
+
+              // 🌍 다국어 적용
+              locale: context.locale,
+              supportedLocales: context.supportedLocales,
+              localizationsDelegates: context.localizationDelegates,
+
               themeMode: mode,
               theme: lightTheme,
               darkTheme: _darkTheme(),

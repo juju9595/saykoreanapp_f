@@ -1,9 +1,11 @@
 // lib/pages/test/test.dart
 
+import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // 전역 Dio: ApiClient.dio 사용
+import 'package:easy_localization/easy_localization.dart';
 
 class TestPage extends StatefulWidget {
   final int testNo;
@@ -74,6 +76,7 @@ class _TestPageState extends State<TestPage> {
 
   // 언어 설정 + 문항 로드
   Future<void> _initLangAndQuestions() async {
+    // 1) 언어 로컬스토리지에서 읽기
     try {
       final prefs = await SharedPreferences.getInstance();
       final stored = prefs.getInt('selectedLangNo');
@@ -84,6 +87,7 @@ class _TestPageState extends State<TestPage> {
       setState(() => langNo = 1);
     }
 
+    // 2) 언어 설정 후 문항/회차 로드
     await _loadQuestions();
   }
 
@@ -102,18 +106,21 @@ class _TestPageState extends State<TestPage> {
     });
 
     try {
+
+      // [1] 문항 로드 - 모드 분기 :: 2번째에서 1번째로
       print("🎯 testMode = ${widget.testMode}");
       List<dynamic> list = [];
 
       if (widget.testMode == "INFINITE") {
-        // 무한모드
+        // 무한모드 : 완료한 studyNo가 나오는 문항
         print("♾️ 무한모드 문항 로드 시작");
         list = await _loadInfiniteItems();
+        // testRound 0 설정 ( 무한모드는 회차 개념 없음 )
         setState(() {
           testRound = 0; // 회차 개념 없음
         });
       } else if (widget.testMode == "HARD") {
-        // 하드모드
+        // 하드모드 : 전체 문항
         print("🔥 하드모드 문항 로드 시작");
         list = await _loadHardItems();
         setState(() {
@@ -141,7 +148,9 @@ class _TestPageState extends State<TestPage> {
         setState(() => testRound = nextRound);
 
         list = await _loadRegularItems();
+
       }
+
 
       print("✅ 로드된 문항 수: ${list.length}");
 
@@ -161,30 +170,32 @@ class _TestPageState extends State<TestPage> {
       setState(() => loading = false);
     }
   }
-
-  // 정기 시험 문항 로드
+      
+  // 📝 [3-1] 정기 시험 문항 로드
   Future<List<dynamic>> _loadRegularItems() async {
-    final res = await ApiClient.dio.get(
-      "/saykorean/test/findtestitem",
-      queryParameters: {
-        "testNo": widget.testNo,
-        "langNo": langNo,
-      },
-    );
+      final res = await ApiClient.dio.get(
+        "/saykorean/test/findtestitem",
+        queryParameters: {
+          "testNo": widget.testNo,
+          "langNo": langNo,
+        },
+      );
 
-    print("▶ findtestitem status = ${res.statusCode}");
-    print("▶ findtestitem data   = ${res.data}");
+      print("▶ findtestitem status = ${res.statusCode}");
+      print("▶ findtestitem data   = ${res.data}");
 
-    if (res.data is List) {
-      return res.data as List;
-    } else if (res.data is Map && res.data['list'] is List) {
-      return res.data['list'] as List;
-    } else {
-      return [];
-    }
+
+      if (res.data is List) {
+        return res.data as List;
+      } else if (res.data is Map && res.data['list'] is List) {
+        return res.data['list'] as List;
+      } else {
+        return [];
+      }
   }
 
-  // 무한모드 문항 로드
+
+  // ♾️ [3-2] 무한모드 문항 로드
   Future<List<dynamic>> _loadInfiniteItems() async {
     final prefs = await SharedPreferences.getInstance();
     final storedIds = prefs.getStringList('studies') ?? const <String>[];
@@ -194,19 +205,20 @@ class _TestPageState extends State<TestPage> {
         .where((n) => n != null && n! > 0)
         .cast<int>()
         .toList();
-
+    
+    // 완료한 주제가 비어있으면
     if (studyNos.isEmpty) {
       print("⚠️ 무한모드 : 완료한 주제가 없습니다");
       return [];
     }
 
-    print("📚 무한모드 : studyNos = $studyNos");
+    print("📚 무한모드 : studyNos = $studyNos}");
 
     final res = await ApiClient.dio.get(
-      "/saykorean/test/infinite-items",
+      "/saykorean/test/infinite-items" ,
       queryParameters: {
-        "langNo": langNo,
-        "studyNos": studyNos.join(','),
+        "langNo" : langNo ,
+        "studyNos" : studyNos.join(','),
       },
     );
 
@@ -215,20 +227,20 @@ class _TestPageState extends State<TestPage> {
 
     if (res.data is List) {
       final list = res.data as List;
-      list.shuffle();
+      list.shuffle(); // 클라이언트에서 난수화
       return list;
     }
     return [];
   }
 
-  // 하드모드 문항 로드
+  // 🔥 [3-3] 하드모드 문항 로드
   Future<List<dynamic>> _loadHardItems() async {
     print("🔥 하드모드: 전체 문항 로드");
 
     final res = await ApiClient.dio.get(
-      "/saykorean/test/hard-items",
+      "/saykorean/test/hard-items" ,
       queryParameters: {
-        "langNo": langNo,
+        "langNo" : langNo,
       },
     );
 
@@ -237,17 +249,15 @@ class _TestPageState extends State<TestPage> {
 
     if (res.data is List) {
       final list = res.data as List;
-      list.shuffle();
+      list.shuffle(); // 클라이언트에서 난수화
       return list;
     }
     return [];
   }
 
-  // 문자열 안전 체크
+  // 문자열 안전 체크 (null / 빈문자열 방지용)
   String? _safeSrc(dynamic s) {
-    if (s is String && s
-        .trim()
-        .isNotEmpty) return s;
+    if (s is String && s.trim().isNotEmpty) return s;
     return null;
   }
 
@@ -257,13 +267,15 @@ class _TestPageState extends State<TestPage> {
   //   body: { testRound, selectedExamNo, userAnswer, langNo }
   //   resp: { score, isCorrect(1/0) }
   //
+
+  // 답안 제출
   Future<void> submitAnswer({int? selectedExamNo}) async {
     if (items.isEmpty) return;
     if (testRound == null && widget.testMode == "REGULAR") return;
 
     final cur = items[idx] as Map<String, dynamic>;
 
-    // 백엔드와 동일 규칙: idx % 3
+    // 백엔드와 동일 규칙: itemIndex % 3 로 타입 판별 (0/1 = 객관식, 2 = 주관식)
     final questionType = idx % 3; // 0=그림객관식, 1=음성객관식, 2=주관식
     final isSubjective = questionType == 2;
 
@@ -356,11 +368,13 @@ class _TestPageState extends State<TestPage> {
       bool isCorrect = false;
 
       if (data is Map) {
+        // score: number
         final s = data["score"];
         if (s is num) {
           score = s.toInt();
         }
 
+        // isCorrect: 1 or 0 (백엔드 계약)
         final ic = data["isCorrect"];
         if (ic is num) {
           isCorrect = ic == 1;
@@ -426,12 +440,14 @@ class _TestPageState extends State<TestPage> {
           },
         );
       } else {
+        // 무한/하드모드 : 모든 문제 정답 시
         _showVictoryDialog();
       }
+
     }
   }
 
-  // 무한/하드모드 오답 시 종료
+  // 무한모드/하드모드 오답 시 종료 다이얼로그
   void _showGameOverDialog() {
     showDialog(
       context: context,
@@ -457,7 +473,7 @@ class _TestPageState extends State<TestPage> {
     );
   }
 
-  // 무한/하드모드 모든 문제 정답
+  // 무한모드/하드모드 모든 문제 정답 시 다이얼로그
   void _showVictoryDialog() {
     showDialog(
       context: context,
@@ -500,6 +516,7 @@ class _TestPageState extends State<TestPage> {
 
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
+    // 백엔드와 **동일 규칙**: itemIndex % 3 로 문항 타입 판별
     final questionType = idx % 3; // 0=그림 객관식, 1=음성 객관식, 2=주관식
     final isImageQuestion = questionType == 0;
     final isAudioQuestion = questionType == 1;
@@ -681,7 +698,7 @@ class _TestPageState extends State<TestPage> {
                         ],
                       ),
 
-                    // 주관식 예문
+                    // 주관식 예문 (2,5,8...) 번째 문항
                     if (isSubjective &&
                         cur?['examSelected'] != null)
                       Container(
@@ -709,7 +726,7 @@ class _TestPageState extends State<TestPage> {
 
               const SizedBox(height: 20),
 
-              // 객관식 / 주관식 UI
+              // 객관식 / 주관식 영역
               if (isMultiple)
                 _buildMultipleChoice(cur)
               else
@@ -759,7 +776,9 @@ class _TestPageState extends State<TestPage> {
                           elevation: 0,
                         ),
                         child: Text(
-                          idx < items.length - 1
+                          idx <
+                              items.length -
+                                  1
                               ? "다음 문제"
                               : "결과 보기",
                         ),
@@ -773,7 +792,6 @@ class _TestPageState extends State<TestPage> {
       ),
     );
   }
-
 
   // ─────────────────────────────────────────────────────────────
   Widget _buildMultipleChoice(Map<String, dynamic>? cur) {
@@ -831,7 +849,6 @@ class _TestPageState extends State<TestPage> {
       ],
     );
   }
-
 
   Widget _buildSubjective() {
     final theme = Theme.of(context);
@@ -896,7 +913,6 @@ class _TestPageState extends State<TestPage> {
   }
 }
 
-// 선택지 pill 버튼
 // 선택지 pill 버튼
 class _ChoiceButton extends StatelessWidget {
   final String label;
