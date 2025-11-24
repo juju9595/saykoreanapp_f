@@ -152,7 +152,11 @@ class _InfoUpdateState extends State<MyInfoUpdatePage>{
     // if (newPassword != checkPassword) { return alert(t("myinfoupdate.checkNewPassword")) }
     if( newPassCon.text != checkPassCon.text ){
       print("비밀번호 불일치 , 새 비밀번호: ${newPassCon.text}, 비밀번호 확인: ${checkPassCon.text} ");
-      Fluttertoast.showToast(msg: "비밀번호가 다릅니다. 다시 확인해주세요.",backgroundColor: Colors.red);
+      Fluttertoast.showToast(msg: "비밀번호가 일치하지 않습니다.",backgroundColor: Colors.red);
+      return;
+    }
+    if( newPassCon.text.length <8 || checkPassCon.text.length <8 ){
+      Fluttertoast.showToast(msg: "8자 이상 비밀번호를 입력해주세요.", backgroundColor: Colors.red);
       return;
     }
     try{
