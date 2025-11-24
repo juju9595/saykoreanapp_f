@@ -17,8 +17,8 @@ class _StorePageState extends State<StorePage> {
   String? _error;
 
   int? _pointBalance;          // 내 포인트 잔액
-  bool _hasDarkTheme = false;  // 다크 테마 보유 여부
-  bool _hasMintTheme = false;  // 민트 테마 보유 여부
+  bool _hasDarkTheme = false;  // 다크 테마 보유 여부 (로컬 캐시)
+  bool _hasMintTheme = false;  // 민트 테마 보유 여부 (로컬 캐시)
 
   @override
   void initState() {
@@ -35,7 +35,7 @@ class _StorePageState extends State<StorePage> {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      // 이미 구매한 적 있는지 체크
+      // 이미 구매한 적 있는지 (로컬에 저장된 플래그)
       _hasDarkTheme = prefs.getBool('hasDarkTheme') ?? false;
       _hasMintTheme = prefs.getBool('hasMintTheme') ?? false;
 
@@ -54,10 +54,11 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 포인트 잔액 조회 (백엔드 엔드포인트에 맞게 수정하면 됨)
-  // 예시: GET /saykorean/point/balance → { "point": 1234 }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 1) 포인트 잔액 조회
+  //   GET /saykorean/store/point
+  //   → 응답: 1234 (int)
+  // ─────────────────────────────────────────────────────────────
   Future<int> _fetchPointBalance() async {
     try {
       final res = await ApiClient.dio.get(
@@ -65,7 +66,7 @@ class _StorePageState extends State<StorePage> {
         options: Options(validateStatus: (status) => true),
       );
 
-      debugPrint('[Store] status = ${res.statusCode}, data = ${res.data}');
+      debugPrint('[Store] point status = ${res.statusCode}, data = ${res.data}');
 
       if (res.statusCode == 200) {
         final data = res.data;
@@ -77,7 +78,6 @@ class _StorePageState extends State<StorePage> {
         }
       }
 
-      // 200이 아닌 경우에도 뭘 받았는지 보고 싶으면 여기서도 출력
       return 0;
     } catch (e) {
       debugPrint('point balance fetch error: $e');
@@ -85,37 +85,36 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // 다크 테마 구매 API 호출
-  // 예시: POST /saykorean/store/buy-dark-theme  body: { "itemCode": "DARK_THEME" }
-  // 성공 시: { "success": true, "newPoint": 900 }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 2) 다크 테마 구매 API 호출
+  //
+  //   POST /saykorean/store/theme/1/buy
+  //   응답: { "success": true, "newPoint": 900 }
+  // ─────────────────────────────────────────────────────────────
   Future<bool> _purchaseDarkTheme() async {
     try {
       final res = await ApiClient.dio.post(
-        '/saykorean/store/buy-dark-theme',
-        data: {"itemCode": "DARK_THEME"},
+        '/saykorean/store/theme/1/buy',
+        // body 필요 없으면 빼도 됨
         options: Options(validateStatus: (status) => true),
       );
 
-      if (res.statusCode == 200) {
-        final data = res.data;
-        if (data is Map) {
-          final success = data['success'] == true;
-          if (success) {
-            final newPoint = data['newPoint'];
-            if (newPoint != null) {
-              setState(() {
-                _pointBalance =
-                    int.tryParse(newPoint.toString()) ?? _pointBalance;
-              });
-            }
-            return true;
+      debugPrint('[Store] buy dark status = ${res.statusCode}, data = ${res.data}');
+
+      if (res.statusCode == 200 && res.data is Map) {
+        final data = res.data as Map;
+        final success = data['success'] == true;
+        if (success) {
+          final newPoint = data['newPoint'];
+          if (newPoint != null) {
+            setState(() {
+              _pointBalance = int.tryParse(newPoint.toString()) ?? _pointBalance;
+            });
           }
+          return true;
         }
       }
+
       return false;
     } catch (e) {
       debugPrint('purchase dark theme error: $e');
@@ -123,35 +122,35 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 민트 테마 구매 API 호출
-  // 예시: POST /saykorean/store/buy-mint-theme  body: { "itemCode": "MINT_THEME" }
-  // 성공 시: { "success": true, "newPoint": 900 }
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 3) 민트 테마 구매 API 호출
+  //
+  //   POST /saykorean/store/theme/2/buy
+  //   응답: { "success": true, "newPoint": 900 }
+  // ─────────────────────────────────────────────────────────────
   Future<bool> _purchaseMintTheme() async {
     try {
       final res = await ApiClient.dio.post(
-        '/saykorean/store/buy-mint-theme',
-        data: {"itemCode": "MINT_THEME"},
+        '/saykorean/store/theme/2/buy',
         options: Options(validateStatus: (status) => true),
       );
 
-      if (res.statusCode == 200) {
-        final data = res.data;
-        if (data is Map) {
-          final success = data['success'] == true;
-          if (success) {
-            final newPoint = data['newPoint'];
-            if (newPoint != null) {
-              setState(() {
-                _pointBalance =
-                    int.tryParse(newPoint.toString()) ?? _pointBalance;
-              });
-            }
-            return true;
+      debugPrint('[Store] buy mint status = ${res.statusCode}, data = ${res.data}');
+
+      if (res.statusCode == 200 && res.data is Map) {
+        final data = res.data as Map;
+        final success = data['success'] == true;
+        if (success) {
+          final newPoint = data['newPoint'];
+          if (newPoint != null) {
+            setState(() {
+              _pointBalance = int.tryParse(newPoint.toString()) ?? _pointBalance;
+            });
           }
+          return true;
         }
       }
+
       return false;
     } catch (e) {
       debugPrint('purchase mint theme error: $e');
@@ -159,13 +158,13 @@ class _StorePageState extends State<StorePage> {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 다크 테마 구매 버튼 클릭 핸들러
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 4) 다크 테마 구매 버튼 핸들러
+  // ─────────────────────────────────────────────────────────────
   Future<void> _onTapBuyDarkTheme() async {
     if (_pointBalance == null) return;
 
-    const int price = 2000; // 💰 다크 테마 가격 (백엔드와 맞춰야 함)
+    const int price = 2000; // ✅ pointPolicy의 '테마 구매 -2000'과 맞추기
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -207,6 +206,7 @@ class _StorePageState extends State<StorePage> {
       return;
     }
 
+    // 로컬 캐시 업데이트
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('hasDarkTheme', true);
 
@@ -219,13 +219,13 @@ class _StorePageState extends State<StorePage> {
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // 민트 테마 구매 버튼 클릭 핸들러
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────
+  // 5) 민트 테마 구매 버튼 핸들러
+  // ─────────────────────────────────────────────────────────────
   Future<void> _onTapBuyMintTheme() async {
     if (_pointBalance == null) return;
 
-    const int price = 2000; // 💰 민트 테마 가격 (백엔드와 맞추기)
+    const int price = 2000; // ✅ pointPolicy와 동일하게 맞추기
 
     if (_pointBalance! < price) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -278,7 +278,6 @@ class _StorePageState extends State<StorePage> {
       const SnackBar(content: Text('민트 테마가 해금되었어요! 설정에서 변경할 수 있어요.')),
     );
   }
-
   // ─────────────────────────────────────────────────────────────────────────
   // UI
   // ─────────────────────────────────────────────────────────────────────────
