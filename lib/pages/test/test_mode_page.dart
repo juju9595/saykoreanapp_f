@@ -1,9 +1,9 @@
-  // lib/pages/test/test_mode_page.dart
-
-  // ✅ 시험 모드 선택 페이지
-  // - 정기시험 : 관리자가 만든 주제별 시험 목록
-  // - 무한모드 : 완료한 주제의 모든 문항(틀릴 때까지)
-  // - 하드모드 : 전체 DB의 모든 문항 (틀릴 때까지)
+// lib/pages/test/test_mode_page.dart
+//
+// ✅ 시험 모드 선택 페이지
+// - 정기시험 : 관리자가 만든 주제별 시험 목록
+// - 무한모드 : 완료한 주제의 모든 문항(틀릴 때까지)
+// - 하드모드 : 전체 DB의 모든 문항 (틀릴 때까지)
 
 import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/api.dart';
@@ -73,7 +73,7 @@ class _TestModePageState extends State<TestModePage> {
       setState(() {
         _regularTests = merged;
       });
-    } catch (e , st) {
+    } catch (e, st) {
       print("TestModePage _bootstrap error: $e");
       print(st);
       setState(() {
@@ -86,18 +86,17 @@ class _TestModePageState extends State<TestModePage> {
         });
       }
     }
-
   }
 
   // 2. 시험목록 선택 불러오기
   Future<List<dynamic>> _fetchTestsByStudy(int studyNo) async {
-    try{
+    try {
       print("_fetchTestsByStudy(studyNo=$studyNo, langNo=$_langNo");
       final res = await ApiClient.dio.get(
-        '/saykorean/test/by-study' ,
+        '/saykorean/test/by-study',
         queryParameters: {
-          'studyNo' : studyNo,
-          'langNo' : _langNo,
+          'studyNo': studyNo,
+          'langNo': _langNo,
         },
       );
 
@@ -108,8 +107,7 @@ class _TestModePageState extends State<TestModePage> {
         return res.data as List;
       }
       return const [];
-
-    } catch (e , st) {
+    } catch (e, st) {
       print("_fetchTestsByStudy error(studyNo=$studyNo): $e");
       print(st);
       return const [];
@@ -122,18 +120,18 @@ class _TestModePageState extends State<TestModePage> {
     final testNo = (rawTestNo is int)
         ? rawTestNo
         : (rawTestNo is num)
-            ? rawTestNo.toInt()
-            : int.tryParse(rawTestNo?.toString() ?? "0") ?? 0;
+        ? rawTestNo.toInt()
+        : int.tryParse(rawTestNo?.toString() ?? "0") ?? 0;
 
     print("정기시험 선택: testNo=$testNo");
     Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => TestPage(
-                testNo: testNo,
-                testMode: "REGULAR",
-            ),
+      context,
+      MaterialPageRoute(
+        builder: (_) => TestPage(
+          testNo: testNo,
+          testMode: "REGULAR",
         ),
+      ),
     );
   }
 
@@ -170,163 +168,171 @@ class _TestModePageState extends State<TestModePage> {
       );
     } catch (e) {
       print("무한모드 시작 실패: $e");
-      _showDiaLog('오류' , '무한모드를 시작할 수 없습니다.');
+      _showDiaLog('오류', '무한모드를 시작할 수 없습니다.');
     }
   }
 
   // 🔥 하드모드 시작
-
   void _startHardMode() async {
     print("🔥 하드모드 시작");
 
     // 확인 다이얼로그
     final confirm = await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('🔥 하드모드'),
-          content: const Text(
-            '전체 DB의 모든 문항이 출제됩니다.\n'
-                '배우지 않은 내용도 포함될 수 있어요.\n'
-                '도전하시겠어요?',
-          ),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('취소'),
-            ),
-            TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('도전!')
-            ),
-          ],
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('🔥 하드모드'),
+        content: const Text(
+          '전체 DB의 모든 문항이 출제됩니다.\n'
+              '배우지 않은 내용도 포함될 수 있어요.\n'
+              '도전하시겠어요?',
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('도전!'),
+          ),
+        ],
+      ),
     );
 
     if (confirm != true) return;
-    
-    // Testpage로 이동 (testNo는 0, testMode는 "HARD")
+
+    // TestPage로 이동 (testNo는 0, testMode는 "HARD")
     Navigator.push(
-        context, 
-        MaterialPageRoute(
-            builder: (_) => TestPage(
-              testNo: 0,  // 하드모드는 testNo 없음
-              testMode: "HARD",
-            )
+      context,
+      MaterialPageRoute(
+        builder: (_) => TestPage(
+          testNo: 0, // 하드모드는 testNo 없음
+          testMode: "HARD",
         ),
+      ),
     );
   }
-  
+
   void _showDiaLog(String title, String message) {
     showDialog(
-        context: context, 
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(context), 
-                child: const Text('확인'),
-            ),
-          ],
-        ),
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
-  
+
   @override
   Widget build(BuildContext context) {
-    const cream = Color(0xFFFFF9F0);
-    const brown = Color(0xFF6B4E42);
-    
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: cream,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('시험 모드 선택'),
-        backgroundColor: cream,
         elevation: 0,
-        foregroundColor: brown,
+        // AppBar 색도 테마에게 맡기기 (이미 MyApp에서 지정)
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? _buildError()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 무한모드 카드
-                      _buildModeCard(
-                        icon: '♾️',
-                        title: '무한모드',
-                        description: '완료한 주제에서 틀릴 때까지 도전!',
-                        color: const Color(0xFFFF9800),
-                        onTap: _startInfiniteMode,
-                      ),
-                      const SizedBox(height: 16),
+          ? _buildError(theme, scheme)
+          : SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 무한모드 카드
+            _buildModeCard(
+              theme: theme,
+              scheme: scheme,
+              icon: '♾️',
+              title: '무한모드',
+              description: '완료한 주제에서 틀릴 때까지 도전!',
+              color: const Color(0xFFFF9800),
+            ),
+            const SizedBox(height: 16),
 
-                      // 하드모드 카드
-                      _buildModeCard(
-                        icon: '🔥',
-                        title: '하드모드',
-                        description: '전체 문항에서 틀릴 때까지 도전!',
-                        color: const Color(0xFFF44336),
-                        onTap: _startHardMode,
-                      ),
-                      const SizedBox(height: 32),
+            // 하드모드 카드
+            _buildModeCard(
+              theme: theme,
+              scheme: scheme,
+              icon: '🔥',
+              title: '하드모드',
+              description: '전체 문항에서 틀릴 때까지 도전!',
+              color: const Color(0xFFF44336),
+            ),
+            const SizedBox(height: 32),
 
-                      // 정기시험 섹션
-                      const Text(
-                        '📚 정기시험',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: brown,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '주제별로 체계적인 학습을 진행해보세요',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF9C7C68),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+            // 정기시험 섹션
+            Text(
+              '📚 정기시험',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isDark
+                    ? scheme.onSurface
+                    : const Color(0xFF6B4E42),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '주제별로 체계적인 학습을 진행해보세요',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: isDark
+                    ? scheme.onSurface.withOpacity(0.7)
+                    : const Color(0xFF9C7C68),
+              ),
+            ),
+            const SizedBox(height: 16),
 
-                      // 정기시험 목록
-                      if (_regularTests.isEmpty)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(32.0),
-                            child: Text(
-                              '완료한 주제의 정기시험이 없습니다.',
-                              style: TextStyle(color: Color(0xFF999999)),
-                            ),
-                          ),
-                        )
-                      else
-                        ..._regularTests.map((test) => _buildTestCard(test)),
-                    ],
+            // 정기시험 목록
+            if (_regularTests.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Text(
+                    '완료한 주제의 정기시험이 없습니다.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurface.withOpacity(0.5),
+                    ),
                   ),
+                ),
+              )
+            else
+              ..._regularTests.map((test) => _buildTestCard(
+                theme: theme,
+                scheme: scheme,
+                test: test,
+              )),
+          ],
+        ),
       ),
     );
   }
 
-
-  Widget _buildError() {
+  Widget _buildError(ThemeData theme, ColorScheme scheme) {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             _error!,
-            style: const TextStyle(color: Colors.red),
+            style: theme.textTheme.bodyMedium?.copyWith(color: scheme.error),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           ElevatedButton(
-              onPressed: _bootstrap,
-              child: const Text('다시 시도'),
+            onPressed: _bootstrap,
+            child: const Text('다시 시도'),
           ),
         ],
       ),
@@ -334,18 +340,27 @@ class _TestModePageState extends State<TestModePage> {
   }
 
   Widget _buildModeCard({
+    required ThemeData theme,
+    required ColorScheme scheme,
     required String icon,
     required String title,
     required String description,
     required Color color,
-    required VoidCallback onTap,
   }) {
+    final isDark = theme.brightness == Brightness.dark;
+
     return Material(
-      color: Colors.white,
+      color: isDark ? scheme.surface : scheme.surface,
       borderRadius: BorderRadius.circular(16),
-      elevation: 4,
+      elevation: 3,
       child: InkWell(
-        onTap: onTap,
+        onTap: () {
+          if (title == '무한모드') {
+            _startInfiniteMode();
+          } else if (title == '하드모드') {
+            _startHardMode();
+          }
+        },
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(20),
@@ -353,11 +368,14 @@ class _TestModePageState extends State<TestModePage> {
             borderRadius: BorderRadius.circular(16),
             gradient: LinearGradient(
               colors: [
-                color.withOpacity(0.1),
-                color.withOpacity(0.05),
+                color.withOpacity(0.10),
+                color.withOpacity(0.03),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
+            ),
+            border: Border.all(
+              color: color.withOpacity(0.2),
             ),
           ),
           child: Row(
@@ -383,7 +401,7 @@ class _TestModePageState extends State<TestModePage> {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: color,
@@ -392,9 +410,9 @@ class _TestModePageState extends State<TestModePage> {
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: const TextStyle(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         fontSize: 14,
-                        color: Color(0xFF666666),
+                        color: scheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -412,43 +430,58 @@ class _TestModePageState extends State<TestModePage> {
     );
   }
 
-  Widget _buildTestCard(dynamic test) {
+  Widget _buildTestCard({
+    required ThemeData theme,
+    required ColorScheme scheme,
+    required dynamic test,
+  }) {
     final testNo = test['testNo'] ?? 0;
-    final title = (test['testTitleSelected'] ?? test['testTitle'] ?? '시험 #$testNo').toString();
+    final title =
+    (test['testTitleSelected'] ?? test['testTitle'] ?? '시험 #$testNo')
+        .toString();
+
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = isDark ? scheme.surface : scheme.surface;
+    final borderColor =
+    isDark ? scheme.outline.withOpacity(0.4) : scheme.outlineVariant;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
         elevation: 2,
         child: InkWell(
           onTap: () => _onTapRegularTest(test),
           borderRadius: BorderRadius.circular(12),
-          child: Padding(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.quiz,
-                  color: Color(0xFF667EEA),
+                  color: scheme.primary,
                   size: 24,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: theme.textTheme.bodyLarge?.copyWith(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF333333),
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios,
                   size: 16,
-                  color: Color(0xFF999999),
+                  color: scheme.onSurface.withOpacity(0.5),
                 ),
               ],
             ),
@@ -458,4 +491,3 @@ class _TestModePageState extends State<TestModePage> {
     );
   }
 }
-
