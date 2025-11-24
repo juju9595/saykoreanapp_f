@@ -1,6 +1,5 @@
 // lib/pages/test/test.dart
 
-import 'package:saykoreanapp_f/pages/test/loading.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -8,7 +7,7 @@ import 'package:saykoreanapp_f/api/api.dart'; // 전역 Dio: ApiClient.dio 사�
 
 class TestPage extends StatefulWidget {
   final int testNo;
-  final String? testMode; // 시험모드 추가 : "REGULAR" , "INFINITE" , "HARD"
+  final String? testMode; // "REGULAR" , "INFINITE" , "HARD"
 
   const TestPage({super.key, required this.testNo, this.testMode});
 
@@ -26,18 +25,14 @@ class _TestPageState extends State<TestPage> {
   String subjective = "";
   Map<String, dynamic>? feedback;
 
-  // AudioPlayer 추가
+  // AudioPlayer
   final AudioPlayer _audioPlayer = AudioPlayer();
 
-  @override
-  void dispose() {
-    _audioPlayer.stop();
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  int? langNo; // null 일 때는 아직 언어 안 정해진 상태
+  int? langNo; // null 이면 아직 언어 안 정해진 상태
   int? testRound; // 회차
+
+  // ✅ 정기시험 정답 개수 카운트용
+  int _correctCount = 0;
 
   // ─────────────────────────────────────────────────────────────
   @override
@@ -46,7 +41,14 @@ class _TestPageState extends State<TestPage> {
     _initLangAndQuestions();
   }
 
-  // ✅ 3. 오디오 재생 함수 추가
+  @override
+  void dispose() {
+    _audioPlayer.stop();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  // ✅ 오디오 재생 함수
   Future<void> _playAudio(String? audioPath) async {
     if (audioPath == null || audioPath.isEmpty) {
       print('⚠️ 오디오 경로가 비어있습니다');
@@ -70,8 +72,8 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
+  // 언어 설정 + 문항 로드
   Future<void> _initLangAndQuestions() async {
-    // 1) 언어 로컬스토리지에서 읽기
     try {
       final prefs = await SharedPreferences.getInstance();
       final stored = prefs.getInt('selectedLangNo');
@@ -82,10 +84,10 @@ class _TestPageState extends State<TestPage> {
       setState(() => langNo = 1);
     }
 
-    // 2) 언어 설정 후 문항/회차 로드
     await _loadQuestions();
   }
 
+  // 문항 로드
   Future<void> _loadQuestions() async {
     if (langNo == null) return;
 
@@ -96,35 +98,32 @@ class _TestPageState extends State<TestPage> {
       idx = 0;
       subjective = "";
       feedback = null;
+      _correctCount = 0; // 새 시험 시작 시 초기화
     });
 
     try {
-
-      // [1] 문항 로드 - 모드 분기 :: 2번째에서 1번째로
       print("🎯 testMode = ${widget.testMode}");
       List<dynamic> list = [];
 
       if (widget.testMode == "INFINITE") {
-        // 무한모드 : 완료한 studyNo가 나오는 문항
+        // 무한모드
         print("♾️ 무한모드 문항 로드 시작");
         list = await _loadInfiniteItems();
-        // testRound 0 설정 ( 무한모드는 회차 개념 없음 )
         setState(() {
-          testRound = 0;
+          testRound = 0; // 회차 개념 없음
         });
       } else if (widget.testMode == "HARD") {
-        // 하드모드 : 전체 문항
+        // 하드모드
         print("🔥 하드모드 문항 로드 시작");
         list = await _loadHardItems();
-        // testRound 0 설정 ( 하드모드는 회차 개념 없음 )
         setState(() {
           testRound = 0;
         });
       } else {
-        // 정규 시험
+        // 정기 시험
         print("📝 정기 시험 문항 로드 시작");
 
-        // [2] 다음 회차 조회
+        // 다음 회차 조회
         final roundRes = await ApiClient.dio.get(
           "/saykorean/test/getnextround",
           queryParameters: {"testNo": widget.testNo},
@@ -142,9 +141,7 @@ class _TestPageState extends State<TestPage> {
         setState(() => testRound = nextRound);
 
         list = await _loadRegularItems();
-
       }
-
 
       print("✅ 로드된 문항 수: ${list.length}");
 
@@ -164,32 +161,30 @@ class _TestPageState extends State<TestPage> {
       setState(() => loading = false);
     }
   }
-      
-  // 📝 [3-1] 정기 시험 문항 로드
+
+  // 정기 시험 문항 로드
   Future<List<dynamic>> _loadRegularItems() async {
-      final res = await ApiClient.dio.get(
-        "/saykorean/test/findtestitem",
-        queryParameters: {
-          "testNo": widget.testNo,
-          "langNo": langNo,
-        },
-      );
+    final res = await ApiClient.dio.get(
+      "/saykorean/test/findtestitem",
+      queryParameters: {
+        "testNo": widget.testNo,
+        "langNo": langNo,
+      },
+    );
 
-      print("▶ findtestitem status = ${res.statusCode}");
-      print("▶ findtestitem data   = ${res.data}");
+    print("▶ findtestitem status = ${res.statusCode}");
+    print("▶ findtestitem data   = ${res.data}");
 
-
-      if (res.data is List) {
-        return res.data as List;
-      } else if (res.data is Map && res.data['list'] is List) {
-        return res.data['list'] as List;
-      } else {
-        return [];
-      }
+    if (res.data is List) {
+      return res.data as List;
+    } else if (res.data is Map && res.data['list'] is List) {
+      return res.data['list'] as List;
+    } else {
+      return [];
+    }
   }
 
-
-  // ♾️ [3-2] 무한모드 문항 로드
+  // 무한모드 문항 로드
   Future<List<dynamic>> _loadInfiniteItems() async {
     final prefs = await SharedPreferences.getInstance();
     final storedIds = prefs.getStringList('studies') ?? const <String>[];
@@ -199,20 +194,19 @@ class _TestPageState extends State<TestPage> {
         .where((n) => n != null && n! > 0)
         .cast<int>()
         .toList();
-    
-    // 완료한 주제가 비어있으면
+
     if (studyNos.isEmpty) {
       print("⚠️ 무한모드 : 완료한 주제가 없습니다");
       return [];
     }
 
-    print("📚 무한모드 : studyNos = $studyNos}");
+    print("📚 무한모드 : studyNos = $studyNos");
 
     final res = await ApiClient.dio.get(
-      "/saykorean/test/infinite-items" ,
+      "/saykorean/test/infinite-items",
       queryParameters: {
-        "langNo" : langNo ,
-        "studyNos" : studyNos.join(','),
+        "langNo": langNo,
+        "studyNos": studyNos.join(','),
       },
     );
 
@@ -221,20 +215,20 @@ class _TestPageState extends State<TestPage> {
 
     if (res.data is List) {
       final list = res.data as List;
-      list.shuffle(); // 클라이언트에서 난수화
+      list.shuffle();
       return list;
     }
     return [];
   }
 
-  // 🔥 [3-3] 하드모드 문항 로드
+  // 하드모드 문항 로드
   Future<List<dynamic>> _loadHardItems() async {
     print("🔥 하드모드: 전체 문항 로드");
 
     final res = await ApiClient.dio.get(
-      "/saykorean/test/hard-items" ,
+      "/saykorean/test/hard-items",
       queryParameters: {
-        "langNo" : langNo,
+        "langNo": langNo,
       },
     );
 
@@ -243,13 +237,13 @@ class _TestPageState extends State<TestPage> {
 
     if (res.data is List) {
       final list = res.data as List;
-      list.shuffle(); // 클라이언트에서 난수화
+      list.shuffle();
       return list;
     }
     return [];
   }
 
-  // 문자열 안전 체크 (null / 빈문자열 방지용)
+  // 문자열 안전 체크
   String? _safeSrc(dynamic s) {
     if (s is String && s.trim().isNotEmpty) return s;
     return null;
@@ -261,39 +255,32 @@ class _TestPageState extends State<TestPage> {
   //   body: { testRound, selectedExamNo, userAnswer, langNo }
   //   resp: { score, isCorrect(1/0) }
   //
-
-  // 답안 제출
   Future<void> submitAnswer({int? selectedExamNo}) async {
     if (items.isEmpty) return;
-    if (testRound == null) return;
+    if (testRound == null && widget.testMode == "REGULAR") return;
 
     final cur = items[idx] as Map<String, dynamic>;
 
-    // 백엔드와 동일 규칙: itemIndex % 3 로 타입 판별 (0/1 = 객관식, 2 = 주관식)
+    // 백엔드와 동일 규칙: idx % 3
     final questionType = idx % 3; // 0=그림객관식, 1=음성객관식, 2=주관식
     final isSubjective = questionType == 2;
 
     final body = {
-      "testRound": testRound,
-      "selectedExamNo": selectedExamNo ?? 0, // 객관식: examNo, 주관식: 0
-      "userAnswer":
-      selectedExamNo != null ? "" : subjective, // 주관식만 userAnswer 사용
+      "testRound": testRound ?? 0,
+      "selectedExamNo": selectedExamNo ?? 0,
+      "userAnswer": selectedExamNo != null ? "" : subjective,
       "langNo": langNo,
-      // 🔥 userNo는 이제 안 보냄. AuthUtil이 JWT/세션에서 읽어감.
+      // userNo는 JWT/세션에서 AuthUtil이 처리
     };
 
-    // 무한/하드모드: testItemNo가 없을 수 있으므로 임시 처리
     final testItemNo = cur['testItemNo'] ?? 0;
+    final effectiveTestNo = widget.testNo; // 무한/하드모드일 때 0일 수도 있음
 
-    // ✅ 무한/하드모드는 testNo가 0이므로 testItemNo 기반 URL 생성
-    final effectiveTestNo = widget.testNo;
-    // 무한/하드모드(testNo=0)일 때 → 0 그대로 유지 → 서버에서 단일 문항 조회 성공!
-    final url =
-        "/saykorean/test/$effectiveTestNo/items/$testItemNo/answer";
+    final url = "/saykorean/test/$effectiveTestNo/items/$testItemNo/answer";
 
-    // 주관식: 로딩 페이지로 넘기기
+    // 🔹 주관식 → 로딩 페이지를 통해 채점
     if (isSubjective && selectedExamNo == null) {
-      print("주관식 → 로딩 페이지로 이동");
+      print("주관식 → /loading 페이지로 이동");
       if (!mounted) return;
 
       final result = await Navigator.pushNamed(
@@ -340,6 +327,10 @@ class _TestPageState extends State<TestPage> {
         }
       }
 
+      if (isCorrect && widget.testMode == "REGULAR") {
+        _correctCount++;
+      }
+
       setState(() {
         feedback = {
           "correct": isCorrect,
@@ -347,11 +338,10 @@ class _TestPageState extends State<TestPage> {
         };
       });
 
-      return; // 객관식 분기 안 타게 여기서 종료
+      return;
     }
 
-
-    // 객관식: 바로 제출
+    // 🔹 객관식 → 바로 제출
     try {
       setState(() => submitting = true);
       final res = await ApiClient.dio.post(url, data: body);
@@ -364,13 +354,11 @@ class _TestPageState extends State<TestPage> {
       bool isCorrect = false;
 
       if (data is Map) {
-        // score: number
         final s = data["score"];
         if (s is num) {
           score = s.toInt();
         }
 
-        // isCorrect: 1 or 0 (백엔드 계약)
         final ic = data["isCorrect"];
         if (ic is num) {
           isCorrect = ic == 1;
@@ -380,6 +368,10 @@ class _TestPageState extends State<TestPage> {
           final v = ic.toLowerCase();
           isCorrect = (v == "1" || v == "true");
         }
+      }
+
+      if (isCorrect && widget.testMode == "REGULAR") {
+        _correctCount++;
       }
 
       setState(() {
@@ -403,8 +395,9 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
+  // 다음 문제 / 결과 페이지 이동
   void goNext() {
-    // ✅ 무한/하드모드 : 한 문제 틀리면 게임 오버
+    // 무한/하드모드 : 한 문제라도 틀리면 종료
     if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
       if (feedback != null && !feedback!['correct']) {
         _showGameOverDialog();
@@ -419,71 +412,70 @@ class _TestPageState extends State<TestPage> {
         feedback = null;
       });
     } else {
-      // 정기시험 : 결과 페이지로
+      // ✅ 마지막 문제까지 다 풀었을 때
       if (widget.testMode == "REGULAR") {
         Navigator.pushNamed(
           context,
           "/testresult",
           arguments: {
             "testNo": widget.testNo,
-            "testMode": widget.testMode ?? "REGULAR",
+            "total": items.length,
+            "correct": _correctCount,
           },
         );
       } else {
-        // 무한/하드모드 : 모든 문제 정답 시
         _showVictoryDialog();
       }
-
     }
   }
 
-  // 무한모드/하드모드 오답 시 종료 다이얼로그
+  // 무한/하드모드 오답 시 종료
   void _showGameOverDialog() {
     showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text("게임 오버"),
-          content: Text(
-            widget.testMode == "INFINITE"
-                ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
-                : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!"
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("게임 오버"),
+        content: Text(
+          widget.testMode == "INFINITE"
+              ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
+              : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // 다이얼로그 닫기
+              Navigator.pop(context); // 시험페이지 닫기
+            },
+            child: const Text("확인"),
           ),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // 다이얼로드 닫기
-                  Navigator.pop(context); // 시험페이지 닫기
-                },
-                child: const Text("확인"),
-            ),
-          ],
-        )
+        ],
+      ),
     );
   }
 
-  // 무한모드/하드모드 모든 문제 정답 시 다이얼로그
+  // 무한/하드모드 모든 문제 정답
   void _showVictoryDialog() {
     showDialog(
-        context: context, 
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Text("🎉 완벽합니다!"),
-          content: Text(
-            widget.testMode == "INFINITE"
-                ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
-                : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!"
-          ),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                child: const Text("확인"),
-            ),
-          ],
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text("🎉 완벽합니다!"),
+        content: Text(
+          widget.testMode == "INFINITE"
+              ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
+              : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
         ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text("확인"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -496,7 +488,6 @@ class _TestPageState extends State<TestPage> {
 
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
-    // 백엔드와 **동일 규칙**: itemIndex % 3 로 문항 타입 판별
     final questionType = idx % 3; // 0=그림 객관식, 1=음성 객관식, 2=주관식
     final isImageQuestion = questionType == 0;
     final isAudioQuestion = questionType == 1;
@@ -546,7 +537,6 @@ class _TestPageState extends State<TestPage> {
             crossAxisAlignment:
             CrossAxisAlignment.stretch,
             children: [
-              // 상단 타이틀
               Text(
                 widget.testMode == "INFINITE"
                     ? "♾️ 무한모드"
@@ -561,7 +551,8 @@ class _TestPageState extends State<TestPage> {
               ),
               const SizedBox(height: 6),
               Text(
-                widget.testMode == "INFINITE" || widget.testMode == "HARD"
+                widget.testMode == "INFINITE" ||
+                    widget.testMode == "HARD"
                     ? "틀릴 때까지 계속 도전해요!"
                     : "문제를 풀고 자신의 실력을 확인해 보아요.",
                 style: const TextStyle(
@@ -597,7 +588,8 @@ class _TestPageState extends State<TestPage> {
                       color: Colors.brown
                           .withOpacity(0.06),
                       blurRadius: 10,
-                      offset: const Offset(0, 5),
+                      offset:
+                      const Offset(0, 5),
                     ),
                   ],
                 ),
@@ -612,17 +604,19 @@ class _TestPageState extends State<TestPage> {
                         fontSize: 16,
                         color: Color(0xFF3F3F46),
                       ),
-                      textAlign: TextAlign.center,
+                      textAlign:
+                      TextAlign.center,
                     ),
                     const SizedBox(height: 12),
 
-                    // 그림 (0,3,6...) 번째 문항
+                    // 그림
                     if (isImageQuestion && hasImage)
                       ClipRRect(
                         borderRadius:
                         BorderRadius.circular(12),
                         child: SizedBox(
-                          width: screenWidth * 0.8,
+                          width:
+                          screenWidth * 0.8,
                           child: AspectRatio(
                             aspectRatio: 3 / 3,
                             child: Image.network(
@@ -631,8 +625,8 @@ class _TestPageState extends State<TestPage> {
                                 'imagePath'])!,
                               ),
                               fit: BoxFit.cover,
-                              errorBuilder:
-                                  (_, __, ___) =>
+                              errorBuilder: (_, __,
+                                  ___) =>
                               const Center(
                                 child: Text(
                                     '이미지를 불러올 수 없어요'),
@@ -642,25 +636,42 @@ class _TestPageState extends State<TestPage> {
                         ),
                       ),
 
-                    // 오디오 버튼 부분을 다음과 같이 수정:
-                    if (isAudioQuestion && hasAudio)
+                    // 오디오
+                    if (isAudioQuestion &&
+                        hasAudio)
                       Column(
                         children: [
-                          for (final audio in (cur!['audios'] as List))
-                            if (_safeSrc(audio['audioPath']) != null)
+                          for (final audio
+                          in (cur!['audios']
+                          as List))
+                            if (_safeSrc(audio[
+                            'audioPath']) !=
+                                null)
                               Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                child: OutlinedButton.icon(
+                                padding:
+                                const EdgeInsets
+                                    .symmetric(
+                                  vertical: 6.0,
+                                ),
+                                child:
+                                OutlinedButton
+                                    .icon(
                                   onPressed: () {
-                                    // ✅ 오디오 재생 구현
-                                    _playAudio(audio['audioPath']);
+                                    _playAudio(audio[
+                                    'audioPath']);
                                   },
-                                  icon: const Text('🔊'),
-                                  label: Text('음성 듣기'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: brown,
-                                    side: const BorderSide(
-                                      color: Color(0xFFE5D5CC),
+                                  icon: const Text(
+                                      '🔊'),
+                                  label: const Text(
+                                      '음성 듣기'),
+                                  style: OutlinedButton
+                                      .styleFrom(
+                                    foregroundColor:
+                                    brown,
+                                    side:
+                                    const BorderSide(
+                                      color: Color(
+                                          0xFFE5D5CC),
                                     ),
                                   ),
                                 ),
@@ -668,19 +679,21 @@ class _TestPageState extends State<TestPage> {
                         ],
                       ),
 
-                    // 주관식 예문 (2,5,8...) 번째 문항
+                    // 주관식 예문
                     if (isSubjective &&
-                        cur?['examSelected'] != null)
+                        cur?['examSelected'] !=
+                            null)
                       Container(
                         margin:
-                        const EdgeInsets.only(
-                            top: 10),
+                        const EdgeInsets
+                            .only(top: 10),
                         padding:
-                        const EdgeInsets.all(
-                            12),
+                        const EdgeInsets
+                            .all(12),
                         decoration:
                         BoxDecoration(
-                          color: const Color(
+                          color:
+                          const Color(
                               0xFFF9FAFB),
                           borderRadius:
                           BorderRadius
@@ -690,8 +703,8 @@ class _TestPageState extends State<TestPage> {
                           cur!['examSelected'],
                           style: const TextStyle(
                             fontSize: 15,
-                            color:
-                            Color(0xFF4B5563),
+                            color: Color(
+                                0xFF4B5563),
                           ),
                         ),
                       ),
@@ -701,7 +714,7 @@ class _TestPageState extends State<TestPage> {
 
               const SizedBox(height: 20),
 
-              // 객관식 / 주관식 영역
+              // 객관식 / 주관식 UI
               if (isMultiple)
                 _buildMultipleChoice(cur)
               else
@@ -744,10 +757,12 @@ class _TestPageState extends State<TestPage> {
                               : Colors.red
                               .shade900,
                           fontWeight:
-                          FontWeight.bold,
+                          FontWeight
+                              .bold,
                         ),
                         textAlign:
-                        TextAlign.center,
+                        TextAlign
+                            .center,
                       ),
                     ),
                     const SizedBox(
@@ -820,14 +835,16 @@ class _TestPageState extends State<TestPage> {
             (options as List).map<Widget>((opt) {
               final map =
               opt as Map<String, dynamic>;
-              final label = map['examSelected'] ??
-                  map['examKo'] ??
-                  "보기 로드 실패";
+              final label =
+                  map['examSelected'] ??
+                      map['examKo'] ??
+                      "보기 로드 실패";
               return _ChoiceButton(
                 label: label.toString(),
                 onTap: feedback == null
                     ? () => submitAnswer(
-                  selectedExamNo: _toInt(map['examNo']),
+                  selectedExamNo:
+                  _toInt(map['examNo']),
                 )
                     : null,
               );
@@ -874,7 +891,8 @@ class _TestPageState extends State<TestPage> {
         SizedBox(
           height: 44,
           child: ElevatedButton(
-            onPressed: (subjective.trim().isEmpty ||
+            onPressed:
+            (subjective.trim().isEmpty ||
                 submitting)
                 ? null
                 : () => submitAnswer(),
