@@ -275,9 +275,23 @@ class _TestPageState extends State<TestPage> {
 
     final cur = items[idx] as Map<String, dynamic>;
 
-    // 백엔드와 동일 규칙: itemIndex % 3 로 타입 판별 (0/1 = 객관식, 2 = 주관식)
-    final questionType = idx % 3; // 0=그림객관식, 1=음성객관식, 2=주관식
-    final isSubjective = questionType == 2;
+    // ✅ 타입 판별
+    int questionType;
+    bool isSubjective;
+    final bool isInfiniteHard =
+        widget.testMode == "INFINITE" || widget.testMode == "HARD";
+    final bool isRegular = !isInfiniteHard;
+
+
+    if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
+      // 무한/하드모드: 모두 객관식
+      questionType = 0;
+      isSubjective = false;
+    } else {
+      // 정기시험 - 백엔드와 동일 규칙: itemIndex % 3 로 타입 판별 (0/1 = 객관식, 2 = 주관식)
+      questionType = idx % 3; // 0=그림객관식, 1=음성객관식, 2=주관식
+      isSubjective = questionType == 2;
+    }
 
     final body = {
       "testRound": testRound ?? 0,
@@ -516,16 +530,35 @@ class _TestPageState extends State<TestPage> {
 
     final cur = (items.isNotEmpty) ? items[idx] as Map<String, dynamic> : null;
 
-    // 백엔드와 **동일 규칙**: itemIndex % 3 로 문항 타입 판별
-    final questionType = idx % 3; // 0=그림 객관식, 1=음성 객관식, 2=주관식
-    final isImageQuestion = questionType == 0;
-    final isAudioQuestion = questionType == 1;
-    final isSubjective = questionType == 2;
+    // ✅ 타입 판별
+    int questionType;
+    bool isSubjective;
+    final bool isInfiniteHard =
+        widget.testMode == "INFINITE" || widget.testMode == "HARD";
+    final bool isRegular = !isInfiniteHard;
+
+    if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
+      // 무한/하드모드: 모두 객관식
+      questionType = 0;
+      isSubjective = false;
+    } else {
+      // 정기시험: 순서 기반
+      // 백엔드와 **동일 규칙**: itemIndex % 3 로 문항 타입 판별
+      questionType = idx % 3; // 0=그림 객관식, 1=음성 객관식, 2=주관식
+      isSubjective = questionType == 2;
+    }
+
     final isMultiple = !isSubjective;
 
+    // ✅ 무한/하드모드: 그림+음성 모두 표시
     final hasImage = _safeSrc(cur?['imagePath']) != null;
     final hasAudio =
         cur?['audios'] is List && (cur!['audios'] as List).isNotEmpty;
+
+    if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
+      // 이 경우 questionType을 0으로 고정했기 때문에
+      // 그림/음성은 hasImage, hasAudio 기준으로 표출됨
+    }
 
     print("🔍 문항 타입: idx=$idx, type=$questionType, "
         "image=$hasImage, audio=$hasAudio, subj=$isSubjective");
@@ -632,7 +665,8 @@ class _TestPageState extends State<TestPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // 질문 텍스트
+                    // 질문 텍스트 (무한모드/하드모드에서는 안 나옴)
+                    if (isRegular)
                     Text(
                       cur?['questionSelected'] ?? "",
                       style: TextStyle(
@@ -643,8 +677,8 @@ class _TestPageState extends State<TestPage> {
                     ),
                     const SizedBox(height: 12),
 
-                    // 그림
-                    if (isImageQuestion && hasImage)
+                    // 그림 (0,3,6...) 번째 문항
+                    if ((isRegular && hasImage && questionType == 0) || (isInfiniteHard && hasImage))
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: SizedBox(
@@ -666,8 +700,9 @@ class _TestPageState extends State<TestPage> {
                         ),
                       ),
 
-                    // 오디오
-                    if (isAudioQuestion && hasAudio)
+                    // 오디오 (1,4,7...) 번째 문항
+                    if ((isRegular && hasAudio && questionType == 1) ||
+                        (isInfiniteHard && hasAudio))
                       Column(
                         children: [
                           for (final audio

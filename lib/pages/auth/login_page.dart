@@ -1,3 +1,4 @@
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -20,6 +21,8 @@ Map<String, dynamic> _decodeJwt(String token) {
   return json.decode(utf8.decode(base64Url.decode(payload)));
 }
 
+//------------------------------------------------------
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -30,21 +33,27 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginState extends State<LoginPage>{
+  // 1. 입력상자 컨트롤러
   TextEditingController emailCon = TextEditingController();
   TextEditingController pwdCont = TextEditingController();
 
+  // user02@example.com , pass#02!
+
+  // 로그인 메소드
   Future<void> onLogin() async {
     print("onLogin.exe");
+    // 2. 자바와 통신
     try {
       final sendData = { "email": emailCon.text, "password": pwdCont.text};
       print(sendData);
-
+      // baseUrl + path만 사용
       final response = await ApiClient.dio.post(
-        '/saykorean/login',
+        '/saykorean/login',     // 슬래시로 시작하는 path만 적기
         data: sendData,
         options: Options(
           headers: {'Content-Type': 'application/json'},
           validateStatus: (status) {
+            // 500 에러도 받아서 확인
             return status! < 600;
           },
         ),
@@ -56,15 +65,26 @@ class _LoginState extends State<LoginPage>{
       final data = response.data;
       print(data);
 
-      if (response.statusCode == 200 && response.data != null && response.data != '') {
+      if (response.statusCode == 200 && response.data != null && response.data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
         final token = response.data['token'];
+
+        // 🔥 1) JWT → userNo 추출
         final decoded = _decodeJwt(token);
         final userNo = decoded['userNo'];
 
+        // 1. 전역변수 호출
         final prefs = await SharedPreferences.getInstance();
+        // 2. 전역변수 값 추가
         await prefs.setString( 'token', token.toString() );
+
+        // * 은주 추가 코드
         await prefs.setInt('myUserNo', userNo);
 
+        // * 로그인 성공 시 페이지 전환 //
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (content) => HomePage()),
+        // );
         Navigator.pushReplacementNamed(context, '/home');
         await onAttend(userNo);
       }
@@ -84,7 +104,7 @@ class _LoginState extends State<LoginPage>{
         SnackBar(content: Text('로그인 중 오류가 발생했습니다.')),
       );
     }
-  }
+  } // c end
 
   Future<void> onAttend(userNo) async {
     try{
@@ -220,3 +240,4 @@ class _LoginState extends State<LoginPage>{
     );
   }
 }
+
