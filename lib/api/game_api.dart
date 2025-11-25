@@ -86,7 +86,7 @@ class GameApi {
     required int gameNo,
     required int gameResult,
     required int gameScore,
-}) async {
+  }) async {
     try {
       // 테스트 모드에서는 토큰 로드 불필요
       // [JWT 모드 전환 시] 주석 해제할 것!
