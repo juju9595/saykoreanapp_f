@@ -122,7 +122,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   // 메시지 전송
-  void _send() {
+  void _sendMessage() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -141,6 +141,13 @@ class _ChatPageState extends State<ChatPage> {
     try {
       _channel!.sink.add(jsonEncode(payload));
       _controller.clear();
+
+      // 스크롤 아래로
+      _scrollToBottom();
+
+      // 부모에게 알려줄 필요 있을 때
+      widget.onMessageSent?.call();
+
     } catch (e) {
       print("❌ 메시지 전송 오류: $e");
       _connectSocket(); // 자동 재연결
