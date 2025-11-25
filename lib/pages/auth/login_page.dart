@@ -68,6 +68,66 @@ class _LoginState extends State<LoginPage>{
       final data = response.data;
       print(data);
 
+      // ⭐ 제재된 계정 체크 (403 Forbidden)
+      if (response.statusCode == 403) {
+        final errorData = response.data;
+
+        if (errorData['error'] == 'ACCOUNT_RESTRICTED') {
+          final remainingDays = errorData['remainingDays'] ?? 0;
+
+          // 제재 알림 다이얼로그
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text(
+                  '⚠️ 계정 제재',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '귀하의 계정이 제재되었습니다.',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Text('사유: 부적절한 메시지 신고 승인'),
+                    SizedBox(height: 10),
+                    Text(
+                      '남은 제재 기간: $remainingDays일',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 15),
+                    Text(
+                      '제재 기간이 종료되면 다시 로그인할 수 있습니다.',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('확인', style: TextStyle(fontSize: 16)),
+                  ),
+                ],
+              );
+            },
+          );
+
+          return; // 로그인 중단
+        }
+      }
+
+      // 정상 로그인 처리
       if (response.statusCode == 200 && response.data != null && response.data != '') { // 로그인 성공시 토큰 SharedPreferences 저장하기.
         final token = response.data['token'];
 
