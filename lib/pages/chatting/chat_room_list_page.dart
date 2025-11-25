@@ -46,9 +46,9 @@ class _ChatRoomListPageState extends State<ChatRoomListPage> {
           final r = rooms[i];
 
           return ListTile(
-            title: Text(r['friendName']?.toString() ?? '알 수 없는 사용자'),
-            subtitle: Text(r['lastMessage'].toString() ?? '대화 없음'),
-            trailing: Text(r['lastTime'].toString() ?? ''),
+            title: Text((r['friendName'] ?? '알 수 없는 사용자').toString()),
+            subtitle: Text((r['lastMessage'] ?? '대화 없음').toString()),
+            trailing: Text((r['lastTime'] ?? '').toString()),
             onTap: () {
               Navigator.push(
                 context,
