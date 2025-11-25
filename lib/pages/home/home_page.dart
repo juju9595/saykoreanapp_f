@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -140,7 +141,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     _HomeTopIconButton(
                       icon: Icons.storefront_outlined,
-                      label: '스토어',
+                      label: 'store'.tr(),
                       onTap: () {
                         Navigator.pushNamed(context, '/store');
                       },
@@ -148,7 +149,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(width: 8),
                     _HomeTopIconButton(
                       icon: Icons.emoji_events_outlined,
-                      label: '순위',
+                      label: 'ranking.title'.tr(),
                       onTap: () {
                         Navigator.pushNamed(context, '/ranking');
                       },
@@ -156,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(width: 8),
                     _HomeTopIconButton(
                       icon: Icons.person_outline,
-                      label: '내정보',
+                      label: 'footer.myPage'.tr(),
                       onTap: () {
                         Navigator.pushNamed(context, '/info');
                       },
@@ -208,19 +209,19 @@ class _HomePageState extends State<HomePage> {
                             final confirm = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('로그아웃'),
+                                title: Text('home.logout'.tr()),
                                 content:
-                                const Text('정말 로그아웃 하시겠습니까?'),
+                                Text('common.confirm'.tr()),
                                 actions: [
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, false),
-                                    child: const Text('취소'),
+                                    child: Text('common.confirm'.tr()),
                                   ),
                                   TextButton(
                                     onPressed: () =>
                                         Navigator.pop(context, true),
-                                    child: const Text('로그아웃'),
+                                    child: Text('home.logout'.tr()),
                                   ),
                                 ],
                               ),
@@ -230,7 +231,7 @@ class _HomePageState extends State<HomePage> {
                               LogOut();
                             }
                           },
-                          child: const Text('로그아웃'),
+                          child: Text('home.logout'.tr()),
                         ),
                       ),
 

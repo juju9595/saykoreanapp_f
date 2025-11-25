@@ -125,10 +125,10 @@ class _LanguagePageState extends State<LanguagePage> {
       setState(() => _items = list);
     } on DioException catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.message ?? '언어 목록을 불러오지 못했습니다.');
+      setState(() => _error = e.message ?? 'language.error.load'.tr());
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '언어 목록을 불러오지 못했습니다.');
+      setState(() => _error = 'language.error.load'.tr());
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -177,16 +177,15 @@ class _LanguagePageState extends State<LanguagePage> {
             ),
             const SizedBox(height: 16),
             SKPrimaryButton(
-              label: '다시 시도',
+              label: 'common.confirm'.tr(),
               onPressed: _fetchLanguages,
             ),
           ],
         ),
       );
     } else if (_items.isEmpty) {
-      content = const Center(
-        child: Text('지원 언어가 없습니다.'),
-      );
+      content = Center(
+        child: Text('common.notset'.tr()));
     } else {
       // ✅ 장르 선택 페이지처럼: 한 줄에 한 언어 카드
       content = ListView.separated(
@@ -219,9 +218,9 @@ class _LanguagePageState extends State<LanguagePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SKPageHeader(
-                  title: '언어 선택',
-                  subtitle: '학습에 사용할 언어를 골라주세요.',
+                SKPageHeader(
+                  title: 'language.title'.tr(),
+                  subtitle: 'mypage.selectLanguage'.tr(),
                 ),
                 const SizedBox(height: 16),
                 Expanded(child: content),

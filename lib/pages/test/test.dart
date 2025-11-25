@@ -111,7 +111,7 @@ class _TestPageState extends State<TestPage> {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
+          SnackBar(content: Text("test.audio.error".tr(args: ["$e"]))),
         );
       }
     }
@@ -200,13 +200,13 @@ class _TestPageState extends State<TestPage> {
       setState(() {
         items = list;
         idx = 0;
-        msg = items.isEmpty ? "문항이 없습니다." : "";
+        msg = items.isEmpty ? "test.empty".tr() : "";
       });
     } catch (e, st) {
       print("_loadQuestions error: $e");
       print(st);
       setState(() {
-        msg = "문항을 불러올 수 없습니다.";
+        msg = "test.loadError".tr();
         items = [];
       });
     } finally {
@@ -369,7 +369,7 @@ class _TestPageState extends State<TestPage> {
 
       if (!mounted || result == null || result['ok'] != true) {
         setState(() {
-          msg = "답안 제출 실패";
+          msg = "test.submitError".tr();
           feedback = {
             "correct": false,
             "score": 0,
@@ -457,7 +457,7 @@ class _TestPageState extends State<TestPage> {
       print("submitAnswer error: $e");
       print(st);
       setState(() {
-        msg = "답안 제출 실패";
+        msg = "test.submitError".tr();
         feedback = {
           "correct": false,
           "score": 0,
@@ -506,15 +506,16 @@ class _TestPageState extends State<TestPage> {
 
   // 무한모드/하드모드 오답 시 종료 다이얼로그
   void _showGameOverDialog() {
+    final count = idx + 1;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) =>
           AlertDialog(
-            title: const Text("게임 오버"),
+            title: Text("test.gameover.title".tr()),
             content: Text(
               widget.testMode == "INFINITE"
-                  ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
+                  ? "test.gameover.infinite".tr(args: ["$count"])
                   : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
             ),
             actions: [
