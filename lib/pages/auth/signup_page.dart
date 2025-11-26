@@ -410,15 +410,6 @@ class _SignupState extends State<SignupPage> {
                     ),
 
                     const SizedBox(height: 12),
-                    Text(
-                      '가입 버튼을 누르면 보안 검증(reCAPTCHA)이 자동으로 실행됩니다.',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withOpacity(0.7),
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
                     // ✅ 공통 Primary 버튼 사용 (테마 컬러 자동 대응)
                     SKPrimaryButton(
                       label: "회원가입",
