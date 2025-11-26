@@ -10,7 +10,7 @@ import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// ✅ 공통 UI (헤더/푸터 패딩)
+// ✅ 공통 UI (헤더/푸터 패딩 + 테마 상태)
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
 
 class MyPage extends StatefulWidget {
@@ -249,7 +249,8 @@ class _MyPageState extends State<MyPage> {
         ),
       ),
       body: SafeArea(
-        child: FooterSafeArea( // ✅ 푸터에 안 가리도록 공통 래퍼 적용
+        // 🔥 FooterSafeArea 로 전체 스크롤 영역 감싸서 푸터랑 겹치지 않게
+        child: FooterSafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
             child: Column(
@@ -335,7 +336,7 @@ class _MyPageState extends State<MyPage> {
                   },
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 24), // 🔥 밑에 여유를 좀 더 줘서 푸터와 간격 확보
               ],
             ),
           ),
@@ -347,11 +348,26 @@ class _MyPageState extends State<MyPage> {
   // ------------------- 위젯 조각들 ------------------- //
 
   Widget _buildUserCard(ThemeData theme, ColorScheme scheme) {
-    final cardColor = scheme.surface;
-    final titleColor =
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint'; // 🔥 민트 모드 확인
+
+    // 기본 카드 배경
+    Color cardColor = scheme.surface;
+    Color titleColor =
         theme.appBarTheme.foregroundColor ?? const Color(0xFF6B4E42);
-    final labelColor = theme.textTheme.bodySmall?.color ??
+    Color labelColor = theme.textTheme.bodySmall?.color ??
         scheme.onSurface.withOpacity(0.7);
+
+    if (isMint && !isDark) {
+      // 🔥 민트 모드 : 카드 흰색 + 제목/아이콘 민트
+      cardColor = Colors.white;
+      titleColor = const Color(0xFF2F7A69);
+      labelColor = const Color(0xFF4E8476);
+    } else if (isDark) {
+      cardColor = scheme.surfaceContainer;
+      titleColor = scheme.onSurface;
+      labelColor = scheme.onSurface.withOpacity(0.7);
+    }
 
     return Material(
       color: cardColor,
@@ -480,12 +496,19 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint'; // 🔥
+
+    Color color = scheme.onSurface.withOpacity(0.7);
+    if (isMint && !isDark) {
+      color = const Color(0xFF4E8476);
+    }
 
     return Text(
       text,
       style: theme.textTheme.bodySmall?.copyWith(
         fontSize: 13,
-        color: scheme.onSurface.withOpacity(0.7),
+        color: color,
       ),
     );
   }
@@ -509,12 +532,34 @@ class _SettingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final titleColor =
-        theme.appBarTheme.foregroundColor ?? const Color(0xFF6B4E42);
-    final subtitleColor =
-        theme.textTheme.bodySmall?.color ?? const Color(0xFF9C7C68);
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint'; // 🔥
 
-    final cardColor = scheme.surface;
+    Color titleColor =
+        theme.appBarTheme.foregroundColor ?? const Color(0xFF6B4E42);
+    Color subtitleColor =
+        theme.textTheme.bodySmall?.color ?? const Color(0xFF9C7C68);
+    Color cardColor = scheme.surface;
+    Color iconBg = scheme.secondaryContainer;
+    Color iconColor = scheme.onSecondaryContainer;
+    Color arrowColor = const Color(0xFFB89C8A);
+
+    if (isMint && !isDark) {
+      // 🔥 민트 모드: 흰 카드 + 민트 아이콘 + 민트 화살표 (다른 화면과 통일)
+      cardColor = Colors.white;
+      titleColor = const Color(0xFF2F7A69);
+      subtitleColor = const Color(0xFF4E8476);
+      iconBg = const Color(0xFFE7FFF6);
+      iconColor = const Color(0xFF2F7A69);
+      arrowColor = const Color(0x802F7A69);
+    } else if (isDark) {
+      cardColor = scheme.surfaceContainer;
+      titleColor = scheme.onSurface;
+      subtitleColor = scheme.onSurface.withOpacity(0.7);
+      iconBg = scheme.secondaryContainer;
+      iconColor = scheme.onSecondaryContainer;
+      arrowColor = scheme.outline;
+    }
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -542,12 +587,12 @@ class _SettingCard extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: scheme.secondaryContainer,
+                color: iconBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: scheme.onSecondaryContainer,
+                color: iconColor,
                 size: 22,
               ),
             ),
@@ -575,9 +620,9 @@ class _SettingCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: Color(0xFFB89C8A),
+              color: arrowColor,
             ),
           ],
         ),

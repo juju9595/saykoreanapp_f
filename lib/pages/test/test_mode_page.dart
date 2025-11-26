@@ -236,8 +236,14 @@ class _TestModePageState extends State<TestModePage> {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final bg = theme.scaffoldBackgroundColor;
+
+    final bool isMintTheme =
+        !isDark && bg.value == const Color(0xFFE7FFF6).value;
+
     final titleColor = theme.appBarTheme.foregroundColor ??
-        (isDark ? scheme.onSurface : const Color(0xFF6B4E42));
+        (isDark
+            ? scheme.onSurface
+            : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42)));
 
     return Scaffold(
       backgroundColor: bg,
@@ -261,8 +267,7 @@ class _TestModePageState extends State<TestModePage> {
           : SafeArea(
         child: FooterSafeArea(
           child: SingleChildScrollView(
-            padding:
-            const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
             child: _buildContent(theme),
           ),
         ),
@@ -278,8 +283,8 @@ class _TestModePageState extends State<TestModePage> {
         children: [
           Text(
             _error!,
-            style: theme.textTheme.bodyMedium
-                ?.copyWith(color: scheme.error),
+            style:
+            theme.textTheme.bodyMedium?.copyWith(color: scheme.error),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
@@ -299,6 +304,15 @@ class _TestModePageState extends State<TestModePage> {
 
   Widget _buildContent(ThemeData theme) {
     final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final bg = theme.scaffoldBackgroundColor;
+    final bool isMintTheme =
+        !isDark && bg.value == const Color(0xFFE7FFF6).value;
+
+    final Color sectionTitleColor =
+    isMintTheme ? const Color(0xFF2F7A69) : scheme.primary;
+    final Color sectionSubColor =
+    isMintTheme ? const Color(0xFF4E8476) : scheme.onSurface.withOpacity(0.6);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -334,14 +348,14 @@ class _TestModePageState extends State<TestModePage> {
           style: theme.textTheme.titleMedium?.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.w800,
-            color: scheme.primary,
+            color: sectionTitleColor,
           ),
         ),
         const SizedBox(height: 6),
         Text(
           '주제별로 준비된 시험에 응시해보세요.',
           style: theme.textTheme.bodySmall?.copyWith(
-            color: scheme.onSurface.withOpacity(0.6),
+            color: sectionSubColor,
           ),
         ),
         const SizedBox(height: 12),
@@ -353,8 +367,7 @@ class _TestModePageState extends State<TestModePage> {
               child: Text(
                 '완료한 주제의 정기시험이 없습니다.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color:
-                  scheme.onSurface.withOpacity(0.6),
+                  color: sectionSubColor,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -396,7 +409,12 @@ class _ModeTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final isMint = themeColorNotifier.value == 'mint';
+    final bg = theme.scaffoldBackgroundColor;
+
+    // ✅ 민트 테마 판별: themeColorNotifier 값 + 배경색 둘 다 사용
+    final bool isMintTheme =
+        (!isDark && bg.value == const Color(0xFFE7FFF6).value) ||
+            (!isDark && themeColorNotifier.value == 'mint');
 
     // 👉 StudyPage._StudyTile 과 동일한 톤
     Color cardBg = const Color(0xFFFFF5ED);
@@ -406,7 +424,7 @@ class _ModeTile extends StatelessWidget {
     Color descColor = const Color(0xFF9C7C68);
     Color arrowColor = const Color(0xFFCCB3A5);
 
-    if (isMint && !isDark) {
+    if (isMintTheme && !isDark) {
       cardBg = const Color(0xFFF4FFFA);
       badgeBg = const Color(0xFFE7FFF6);
       badgeText = const Color(0xFF2F7A69);
@@ -469,10 +487,8 @@ class _ModeTile extends StatelessWidget {
                 // 텍스트 영역
                 Expanded(
                   child: Column(
-                    mainAxisAlignment:
-                    MainAxisAlignment.center,
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
@@ -487,8 +503,7 @@ class _ModeTile extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 15,
-                                fontWeight:
-                                FontWeight.w700,
+                                fontWeight: FontWeight.w700,
                                 color: titleColor,
                               ),
                             ),
@@ -541,14 +556,17 @@ class _RegularTestTile extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final isMint = themeColorNotifier.value == 'mint';
+    final bg = theme.scaffoldBackgroundColor;
 
     final testNo = test['testNo'] ?? 0;
     final title =
-    (test['testTitleSelected'] ??
-        test['testTitle'] ??
-        '시험 #$testNo')
+    (test['testTitleSelected'] ?? test['testTitle'] ?? '시험 #$testNo')
         .toString();
+
+    // ✅ 민트 테마 판별: themeColorNotifier 값 + 배경색 둘 다 사용
+    final bool isMintTheme =
+        (!isDark && bg.value == const Color(0xFFE7FFF6).value) ||
+            (!isDark && themeColorNotifier.value == 'mint');
 
     // 👉 StudyPage._StudyTile 팔레트 그대로
     Color cardBg = const Color(0xFFFFF5ED);
@@ -558,7 +576,7 @@ class _RegularTestTile extends StatelessWidget {
     Color subColor = const Color(0xFF9C7C68);
     Color arrowColor = const Color(0xFFCCB3A5);
 
-    if (isMint && !isDark) {
+    if (isMintTheme && !isDark) {
       cardBg = const Color(0xFFF4FFFA);
       badgeBg = const Color(0xFFE7FFF6);
       badgeText = const Color(0xFF2F7A69);
@@ -617,10 +635,8 @@ class _RegularTestTile extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
-                    mainAxisAlignment:
-                    MainAxisAlignment.center,
-                    crossAxisAlignment:
-                    CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,

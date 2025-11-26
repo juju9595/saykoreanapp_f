@@ -109,9 +109,7 @@ class _TestPageState extends State<TestPage> {
     } catch (e) {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
-        );
+        showFooterSnackBar(context, '오디오를 재생할 수 없어요.');
       }
     }
   }
@@ -619,8 +617,6 @@ class _TestPageState extends State<TestPage> {
     final cardColor = isDark ? scheme.surface : Colors.white;
     final cardBorderColor =
     isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB);
-    final nextButtonBg = scheme.primaryContainer;
-    final nextButtonFg = scheme.onPrimaryContainer;
 
     return Scaffold(
       backgroundColor: bg,
@@ -736,38 +732,41 @@ class _TestPageState extends State<TestPage> {
                       ),
 
                     // 오디오
-                    if ((isRegular &&
-                        hasAudio &&
-                        questionType == 1) ||
+                    if ((isRegular && hasAudio && questionType == 1) ||
                         (isInfiniteHard && hasAudio))
-                      Column(
-                        children: [
-                          for (final audio
-                          in (cur!['audios'] as List))
-                            if (_safeSrc(audio['audioPath']) !=
-                                null)
-                              Padding(
-                                padding:
-                                const EdgeInsets.symmetric(
-                                    vertical: 6.0),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final maxWidth = constraints.maxWidth;
+                          // 한 줄에 2개씩 나란히 배치 (좌/우)
+                          final itemWidth = (maxWidth - 12) / 2; // 가운데 여백 12
+
+                          final audios = (cur!['audios'] as List);
+
+                          return Wrap(
+                            spacing: 12,       // 가로 간격
+                            runSpacing: 8,     // 세로 간격
+                            children: audios.where((audio) {
+                              return _safeSrc(audio['audioPath']) != null;
+                            }).map<Widget>((audio) {
+                              return SizedBox(
+                                width: itemWidth,
                                 child: OutlinedButton.icon(
                                   onPressed: () {
-                                    _playAudio(
-                                        audio['audioPath']);
+                                    _playAudio(audio['audioPath']);
                                   },
                                   icon: const Text('🔊'),
-                                  label:
-                                  const Text('음성 듣기'),
-                                  style:
-                                  OutlinedButton.styleFrom(
+                                  label: const Text('음성 듣기'),
+                                  style: OutlinedButton.styleFrom(
                                     foregroundColor: titleColor,
                                     side: BorderSide(
                                       color: cardBorderColor,
                                     ),
                                   ),
                                 ),
-                              )
-                        ],
+                              );
+                            }).toList(),
+                          );
+                        },
                       ),
 
                     // 주관식 예문
@@ -813,7 +812,8 @@ class _TestPageState extends State<TestPage> {
                   CrossAxisAlignment.stretch,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(14),
+                      padding:
+                      const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: feedback!['correct']
                             ? Colors.green.shade100
@@ -826,8 +826,7 @@ class _TestPageState extends State<TestPage> {
                             ? "정답입니다!"
                             : "틀렸어요 😢",
                         style: TextStyle(
-                          color:
-                          feedback!['correct']
+                          color: feedback!['correct']
                               ? Colors
                               .green.shade900
                               : Colors.red.shade900,
@@ -838,24 +837,13 @@ class _TestPageState extends State<TestPage> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: goNext,
-                        style:
-                        ElevatedButton.styleFrom(
-                          backgroundColor:
-                          nextButtonBg,
-                          foregroundColor:
-                          nextButtonFg,
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          idx < items.length - 1
-                              ? "다음 문제"
-                              : "결과 보기",
-                        ),
-                      ),
+
+                    // 🔥 공통 기본 버튼 사용 (테마/민트 자동 반영)
+                    SKPrimaryButton(
+                      label: idx < items.length - 1
+                          ? "다음 문제"
+                          : "결과 보기",
+                      onPressed: goNext,
                     ),
                   ],
                 ),
@@ -931,8 +919,6 @@ class _TestPageState extends State<TestPage> {
     final scheme = theme.colorScheme;
     final titleColor = theme.appBarTheme.foregroundColor ??
         const Color(0xFF6B4E42);
-    final buttonBg = scheme.primaryContainer;
-    final buttonFg = scheme.onPrimaryContainer;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -967,20 +953,13 @@ class _TestPageState extends State<TestPage> {
           ),
         ),
         const SizedBox(height: 10),
-        SizedBox(
-          height: 44,
-          child: ElevatedButton(
-            onPressed:
-            (subjective.trim().isEmpty || submitting)
-                ? null
-                : () => submitAnswer(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: buttonBg,
-              foregroundColor: buttonFg,
-              elevation: 0,
-            ),
-            child: Text(submitting ? "로딩 중..." : "제출"),
-          ),
+
+        // 🔥 공통 기본 버튼 사용 (themeColor 따라 자동 변경)
+        SKPrimaryButton(
+          label: submitting ? "로딩 중..." : "제출",
+          onPressed: (subjective.trim().isEmpty || submitting)
+              ? null
+              : () => submitAnswer(),
         ),
       ],
     );

@@ -609,27 +609,36 @@ class _FooterBar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final isMint = themeColorNotifier.value == 'mint';
 
-    // 모드/테마별 색 결정
-    late final Color bgTop;
-    late final Color bgBottom;
+    // 활성/비활성 아이콘 컬러
     late final Color activeColor;
     late final Color inactiveColor;
 
     if (isDark) {
-      bgTop = scheme.surfaceContainerHigh;
-      bgBottom = scheme.surface;
-      activeColor = scheme.primary;
-      inactiveColor = scheme.primary.withOpacity(0.5);
+      // 다크에선 살짝 노란 포인트 컬러
+      activeColor = const Color(0xFFF7E0B4);
+      inactiveColor = const Color(0x80F7E0B4);
     } else if (isMint) {
-      bgTop = const Color(0xFFE7FFF6);
-      bgBottom = const Color(0xFFD3F8EA);
       activeColor = const Color(0xFF2F7A69);
       inactiveColor = const Color(0x802F7A69);
     } else {
-      bgTop = const Color(0xFFFFF9F0);
-      bgBottom = const Color(0xFFFFF1E8);
       activeColor = const Color(0xFFFFAAA5);
       inactiveColor = const Color(0x80FFAAA5);
+    }
+
+    // 배경 그라데이션 / 단색
+    late final Color bgTop;
+    late final Color bgBottom;
+
+    if (isDark) {
+      // 다크는 물결이랑 자연스럽게 이어지는 단색 카드
+      bgTop = scheme.surface;
+      bgBottom = scheme.surface;
+    } else if (isMint) {
+      bgTop = const Color(0xFFE7FFF6);
+      bgBottom = const Color(0xFFD3F8EA);
+    } else {
+      bgTop = const Color(0xFFFFF9F0);
+      bgBottom = const Color(0xFFFFF1E8);
     }
 
     return SafeArea(
@@ -637,20 +646,29 @@ class _FooterBar extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           child: Container(
-            height: 76,
+            height: 64,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
+              color: isDark ? bgBottom : null,
+              gradient: isDark
+                  ? null
+                  : LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [bgTop, bgBottom],
               ),
-              boxShadow: const [
+              border: isDark
+                  ? Border.all(
+                color: Colors.white.withOpacity(0.06),
+                width: 1,
+              )
+                  : null,
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x1A000000),
+                  color: Colors.black.withOpacity(isDark ? 0.45 : 0.12),
                   blurRadius: 18,
-                  offset: Offset(0, -2),
+                  offset: const Offset(0, -4),
                 ),
               ],
             ),
@@ -717,24 +735,35 @@ class _FooterBar extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: () => goNamed(route),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              svg,
-              height: 28,
-              colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: c,
+        child: DefaultTextStyle(
+          // 밑줄 완전 방지
+          style: const TextStyle(
+            decoration: TextDecoration.none,
+            decorationColor: Colors.transparent,
+            decorationThickness: 0,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                svg,
+                height: 24,
+                colorFilter: ColorFilter.mode(c, BlendMode.srcIn),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: c,
+                  decoration: TextDecoration.none,
+                  decorationColor: Colors.transparent,
+                  decorationThickness: 0,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -782,4 +811,197 @@ class FooterSafeArea extends StatelessWidget {
       child: child,
     );
   }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 공통 선택 카드 (장르 / 언어 선택 등)
+// ─────────────────────────────────────────────────────────────
+
+class SKSelectTile extends StatelessWidget {
+  final int index;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const SKSelectTile({
+    super.key,
+    required this.index,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme  = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+
+    // ── 기본(라이트) 톤: 연살구
+    Color cardBg      = const Color(0xFFFFF5ED);   // 카드 배경
+    Color badgeBg     = const Color(0xFFFBE3D6);   // 번호 동그라미 배경
+    Color badgeText   = const Color(0xFF9C7C68);
+    Color titleColor  = const Color(0xFF6B4E42);
+    Color borderColor = Colors.transparent;
+    Color checkBg     = Colors.transparent;
+    Color checkIcon   = const Color(0xFFB38A72);
+
+    if (selected) {
+      cardBg      = const Color(0xFFFFE5CF);
+      borderColor = const Color(0x00FFFFFF);
+      checkBg     = const Color(0xFF6B4E42);
+      checkIcon   = const Color(0xFFFFE5CF);
+    }
+
+    // ── 🌿 민트 테마: 배경은 흰색, 선택 시만 연민트
+    if (isMint && !isDark) {
+      cardBg      = selected ? const Color(0xFFE7FFF6) : Colors.white;
+      badgeBg     = const Color(0xFFE7FFF6);
+      badgeText   = const Color(0xFF2F7A69);
+      titleColor  = const Color(0xFF2F7A69);
+      borderColor = Colors.transparent;
+      checkBg     = selected ? const Color(0xFF2F7A69) : Colors.transparent;
+      checkIcon   = selected ? Colors.white : const Color(0x802F7A69);
+    }
+
+    // ── 🌙 다크 테마
+    if (isDark) {
+      cardBg     = scheme.surfaceContainer;
+      badgeBg    = scheme.surfaceContainerHigh;
+      badgeText  = scheme.onSurface.withOpacity(0.8);
+      titleColor = scheme.onSurface;
+      checkBg    = selected ? scheme.primary : Colors.transparent;
+      checkIcon  = selected ? scheme.onPrimary : scheme.onSurfaceVariant;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: borderColor),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x11000000),
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const SizedBox(width: 16),
+              // 번호 동그라미
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: badgeBg,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '$index',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: badgeText,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // 제목
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: titleColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // 체크(라디오) 동그라미
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: selected ? Colors.transparent : checkIcon,
+                    width: 2,
+                  ),
+                  color: checkBg,
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.check,
+                  size: 16,
+                  color: selected ? checkIcon : Colors.transparent,
+                ),
+              ),
+              const SizedBox(width: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// 푸터에 안 가려지게 스낵바 띄우는 헬퍼
+// ─────────────────────────────────────────────────────────────
+
+void showFooterSnackBar(
+    BuildContext context,
+    String message, {
+      Color? backgroundColor,
+      Color? textColor,
+    }) {
+  final theme = Theme.of(context);
+  final scheme = theme.colorScheme;
+  final media = MediaQuery.of(context);
+
+  final bg = backgroundColor ??
+      (theme.brightness == Brightness.dark
+          ? scheme.surfaceContainerHighest
+          : const Color(0xFF333333));
+  final fg = textColor ?? Colors.white;
+
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        message,
+        style: TextStyle(
+          color: fg,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      behavior: SnackBarBehavior.floating,
+      // 푸터 + 기기 하단 여백만큼 위로 올리기
+      margin: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        kFooterSafeBottom + media.padding.bottom + 8,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+      ),
+      backgroundColor: bg,
+      duration: const Duration(seconds: 2),
+    ),
+  );
 }
