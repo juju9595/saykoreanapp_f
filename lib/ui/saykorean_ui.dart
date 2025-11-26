@@ -83,44 +83,60 @@ class SKPageHeader extends StatelessWidget {
 }
 
 /// 공통 기본 버튼 (로그아웃/학습완료/확인 등)
+// lib/ui/saykorean_ui.dart 안에 넣을 SKPrimaryButton
+// lib/ui/saykorean_ui.dart 안에 넣을 SKPrimaryButton
 class SKPrimaryButton extends StatelessWidget {
   final String label;
-  final VoidCallback? onPressed;
+  final VoidCallback? onPressed; // ✅ Nullable 로 변경!
+  final bool expand; // true면 가로 전체
 
   const SKPrimaryButton({
     super.key,
     required this.label,
-    this.onPressed,
+    required this.onPressed,
+    this.expand = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme  = Theme.of(context);
+    final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
 
-    // 테마마다 미리 정의해 둔 secondaryContainer / onSecondaryContainer 를 사용
-    // - 기본 라이트: 연살구색
-    // - 민트 테마: 연민트색
-    // - 다크: primaryContainer 계열
-    final Color bg = isDark ? scheme.primaryContainer : scheme.secondaryContainer;
-    final Color fg = isDark ? scheme.onPrimaryContainer : scheme.onSecondaryContainer;
+    // 🎨 색상 규칙
+    //  - 기본 테마(light + default)  : 연핑크 고정 (#FFAAA5)
+    //  - 민트 테마(light + mint)     : 기존 민트 계열 유지
+    //  - 다크 테마                  : ColorScheme 기반
+    Color bg;
+    Color fg;
+
+    if (isDark) {
+      bg = scheme.primaryContainer;
+      fg = scheme.onPrimaryContainer;
+    } else if (isMint) {
+      bg = const Color(0xFF2F7A69);
+      fg = Colors.white;
+    } else {
+      bg = const Color(0xFFFFAAA5); // ⭐ 기본 테마 연핑크 고정
+      fg = Colors.white;
+    }
 
     return SizedBox(
-      width: double.infinity,
+      width: expand ? double.infinity : null,
       height: 48,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: onPressed, // ✅ null 허용 → 비활성화 가능
         style: ElevatedButton.styleFrom(
           backgroundColor: bg,
           foregroundColor: fg,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
           ),
           textStyle: const TextStyle(
             fontSize: 15,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
         child: Text(label),
@@ -128,6 +144,7 @@ class SKPrimaryButton extends StatelessWidget {
     );
   }
 }
+
 
 
 // ─────────────────────────────────────────────────────────────
@@ -960,48 +977,69 @@ class SKSelectTile extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────
 // 푸터에 안 가려지게 스낵바 띄우는 헬퍼
 // ─────────────────────────────────────────────────────────────
-
 void showFooterSnackBar(
     BuildContext context,
     String message, {
+      Duration duration = const Duration(seconds: 2),
       Color? backgroundColor,
-      Color? textColor,
+      Color? foregroundColor,
     }) {
   final theme = Theme.of(context);
   final scheme = theme.colorScheme;
-  final media = MediaQuery.of(context);
+  final isDark = theme.brightness == Brightness.dark;
+  final isMint = themeColorNotifier.value == 'mint';
 
-  final bg = backgroundColor ??
-      (theme.brightness == Brightness.dark
-          ? scheme.surfaceContainerHighest
-          : const Color(0xFF333333));
-  final fg = textColor ?? Colors.white;
+  Color cardBg;
+  Color textColor;
 
-  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  if (isDark) {
+    cardBg = const Color(0xFF2D2421);
+    textColor = const Color(0xFFF7E0B4);
+  } else if (isMint) {
+    cardBg = const Color(0xFFD3F8EA);
+    textColor = const Color(0xFF2F7A69);
+  } else {
+    cardBg = const Color(0xFFFFF1E8);
+    textColor = const Color(0xFF6B4E42);
+  }
+
+  if (backgroundColor != null) cardBg = backgroundColor;
+  if (foregroundColor != null) textColor = foregroundColor;
 
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(
-        message,
-        style: TextStyle(
-          color: fg,
-          fontSize: 13,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
       behavior: SnackBarBehavior.floating,
-      // 푸터 + 기기 하단 여백만큼 위로 올리기
-      margin: EdgeInsets.fromLTRB(
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      duration: duration,
+      margin: const EdgeInsets.fromLTRB(
         16,
         0,
         16,
-        kFooterSafeBottom + media.padding.bottom + 8,
+        kFooterSafeBottom + 8,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Text(
+          message,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
-      backgroundColor: bg,
-      duration: const Duration(seconds: 2),
     ),
   );
 }

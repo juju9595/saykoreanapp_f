@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
-import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI (헤더/버튼)
+import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ FooterSafeArea / themeColorNotifier / SKPageHeader
 
 // ─────────────────────────────────────────────────────────────
 // 내 정보 수정 페이지
@@ -114,6 +114,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         ),
         queryParameters: {'phone': plusPhone},
       );
+      // ignore: avoid_print
       print("(중복 : 1 , 사용 가능 : 0 반환 ): ${response.data}");
       if (response.statusCode == 200 &&
           response.data != null &&
@@ -132,6 +133,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -145,6 +147,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         msg: "입력값을 채워주세요.",
         backgroundColor: Colors.red,
       );
+      // ignore: avoid_print
       print("입력값을 채워주세요.");
       return;
     }
@@ -153,8 +156,11 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           emailPhoneNumber?.completeNumber ?? "+82${phoneCon.text}";
       final bool isPhoneChanged = (originalPhone != plusPhone);
 
+      // ignore: avoid_print
       print("원래 번호: $originalPhone");
+      // ignore: avoid_print
       print("현재 번호: $plusPhone");
+      // ignore: avoid_print
       print("변경 여부: $isPhoneChanged");
 
       if (isPhoneChanged && !phoneCheck) {
@@ -170,6 +176,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         "nickName": nickCon.text,
         "phone": plusPhone,
       };
+      // ignore: avoid_print
       print(sendData);
 
       final response = await ApiClient.dio.put(
@@ -179,7 +186,9 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           validateStatus: (status) => true,
         ),
       );
+      // ignore: avoid_print
       print(response);
+      // ignore: avoid_print
       print(response.data);
 
       if (response.statusCode == 200 &&
@@ -201,6 +210,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -214,10 +224,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         msg: "입력값을 채워주세요.",
         backgroundColor: Colors.red,
       );
+      // ignore: avoid_print
       print("입력값을 채워주세요.");
       return;
     }
     if (newPassCon.text != checkPassCon.text) {
+      // ignore: avoid_print
       print(
           "비밀번호 불일치 , 새 비밀번호: ${newPassCon.text}, 비밀번호 확인: ${checkPassCon.text} ");
       Fluttertoast.showToast(
@@ -245,7 +257,9 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           validateStatus: (status) => true,
         ),
       );
+      // ignore: avoid_print
       print(response);
+      // ignore: avoid_print
       print(response.data);
 
       if (response.statusCode == 200 && response.data != null) {
@@ -265,6 +279,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -289,6 +304,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           validateStatus: (status) => true,
         ),
       );
+      // ignore: avoid_print
       print("탈퇴 성공 시 1 반환: ${response.data}");
 
       if (response.statusCode == 200 && response.data == 1) {
@@ -304,6 +320,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -328,6 +345,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -360,6 +378,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         });
       }
     } catch (e) {
+      // ignore: avoid_print
       print(e);
     }
   }
@@ -373,6 +392,20 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final bg = theme.scaffoldBackgroundColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final isMint = themeColorNotifier.value == 'mint';
+
+    // 🔥 이 페이지 전용 버튼 색: 기본 테마(라이트 + default)일 때만 연핑크 + 갈색
+    Color primaryBtnBg;
+    Color primaryBtnFg;
+
+    if (!isDark && !isMint) {
+      primaryBtnBg = const Color(0xFFFFEEED); // 연핑크
+      primaryBtnFg = const Color(0xFF6B4E42); // 갈색
+    } else {
+      primaryBtnBg = scheme.primary;
+      primaryBtnFg = scheme.onPrimary;
+    }
 
     return Scaffold(
       backgroundColor: bg,
@@ -392,7 +425,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         ),
       ),
       body: SafeArea(
-        // 🔥 하단 탭과 안 겹치게 FooterSafeArea로 감싸기
+        // ✅ 푸터에 안 가리도록 FooterSafeArea 추가
         child: FooterSafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
@@ -430,15 +463,43 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       const SizedBox(height: 12),
                       _buildPhoneField(theme, scheme),
                       const SizedBox(height: 8),
-                      // 🔥 공통 버튼 사용 (민트/다크 자동 반영)
-                      SKPrimaryButton(
-                        label: '전화번호 중복 확인',
-                        onPressed: checkPhone,
+                      SizedBox(
+                        height: 44,
+                        child: ElevatedButton(
+                          onPressed: checkPhone,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("전화번호 중복 확인"),
+                        ),
                       ),
                       const SizedBox(height: 12),
-                      SKPrimaryButton(
-                        label: '정보 수정',
-                        onPressed: updateUserInfo,
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: updateUserInfo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("정보 수정"),
+                        ),
                       ),
                     ],
                   ),
@@ -479,9 +540,24 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                         obscure: true,
                       ),
                       const SizedBox(height: 12),
-                      SKPrimaryButton(
-                        label: '비밀번호 수정',
-                        onPressed: updatePwrd,
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: updatePwrd,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("비밀번호 수정"),
+                        ),
                       ),
                     ],
                   ),
@@ -506,13 +582,29 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      SKPrimaryButton(
-                        label: '회원 탈퇴',
-                        onPressed: deleteUserStatus,
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: deleteUserStatus,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBtnBg,
+                            foregroundColor: primaryBtnFg,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          child: const Text("회원 탈퇴"),
+                        ),
                       ),
                     ],
                   ),
                 ),
+
                 const SizedBox(height: 8),
               ],
             ),
@@ -537,23 +629,20 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
     final isDark = theme.brightness == Brightness.dark;
     final isMint = themeColorNotifier.value == 'mint';
 
-    Color cardColor = scheme.surface;
+    // ✅ 이 페이지는 카드도 기본테마에서 흰색으로
+    Color cardColor;
+    if (isDark) {
+      cardColor = scheme.surfaceContainer;
+    } else {
+      cardColor = Colors.white;
+    }
+
     Color titleColor = accentColor ?? scheme.primary;
     Color descColor = scheme.onSurface.withOpacity(0.7);
 
-    if (isMint && !isDark) {
-      // 🔥 민트 모드 : 흰 카드 + 민트 포인트
-      cardColor = Colors.white;
-      if (accentColor == null) {
-        titleColor = const Color(0xFF2F7A69);
-      }
+    if (isMint && !isDark && accentColor == null) {
+      titleColor = const Color(0xFF2F7A69);
       descColor = const Color(0xFF4E8476);
-    } else if (isDark) {
-      cardColor = scheme.surfaceContainer;
-      if (accentColor == null) {
-        titleColor = scheme.onSurface;
-      }
-      descColor = scheme.onSurface.withOpacity(0.7);
     }
 
     return Material(
@@ -654,6 +743,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
       onChanged: (phone) {
         emailPhoneNumber = phone;
         phoneCheck = false;
+        // ignore: avoid_print
         print("입력한 번호: ${phone.number}");
       },
     );

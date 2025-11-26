@@ -533,26 +533,35 @@ class _SettingCard extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final isMint = themeColorNotifier.value == 'mint'; // 🔥
+    final isMint = themeColorNotifier.value == 'mint'; // 🔥 현재 테마 색상
 
+    // ─────────────────────────────
+    // 기본값 (연핑크 테마)
+    // ─────────────────────────────
     Color titleColor =
         theme.appBarTheme.foregroundColor ?? const Color(0xFF6B4E42);
     Color subtitleColor =
         theme.textTheme.bodySmall?.color ?? const Color(0xFF9C7C68);
-    Color cardColor = scheme.surface;
-    Color iconBg = scheme.secondaryContainer;
-    Color iconColor = scheme.onSecondaryContainer;
-    Color arrowColor = const Color(0xFFB89C8A);
+    Color cardColor = Colors.white;
+    Color iconBg = const Color(0xFFFFF0EC);      // 💗 연핑크 톤 배경
+    Color iconColor = const Color(0xFFEB6A73);   // 💗 살짝 진한 핑크
+    Color arrowColor = const Color(0xFFFFAAA5);  // 💗 화살표도 연핑크
 
+    // ─────────────────────────────
+    // 민트 테마
+    // ─────────────────────────────
     if (isMint && !isDark) {
-      // 🔥 민트 모드: 흰 카드 + 민트 아이콘 + 민트 화살표 (다른 화면과 통일)
       cardColor = Colors.white;
       titleColor = const Color(0xFF2F7A69);
       subtitleColor = const Color(0xFF4E8476);
       iconBg = const Color(0xFFE7FFF6);
       iconColor = const Color(0xFF2F7A69);
       arrowColor = const Color(0x802F7A69);
-    } else if (isDark) {
+    }
+    // ─────────────────────────────
+    // 다크 테마
+    // ─────────────────────────────
+    else if (isDark) {
       cardColor = scheme.surfaceContainer;
       titleColor = scheme.onSurface;
       subtitleColor = scheme.onSurface.withOpacity(0.7);
@@ -630,3 +639,4 @@ class _SettingCard extends StatelessWidget {
     );
   }
 }
+

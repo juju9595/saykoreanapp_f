@@ -954,13 +954,14 @@ class _TestPageState extends State<TestPage> {
         ),
         const SizedBox(height: 10),
 
-        // 🔥 공통 기본 버튼 사용 (themeColor 따라 자동 변경)
-        SKPrimaryButton(
-          label: submitting ? "로딩 중..." : "제출",
-          onPressed: (subjective.trim().isEmpty || submitting)
-              ? null
-              : () => submitAnswer(),
-        ),
+        // 공통 기본 버튼 사용 (themeColor 따라 자동 변경)
+    SKPrimaryButton(
+    label: '제출',
+    onPressed: () {
+    if (subjective.trim().isEmpty || submitting) return;
+    submitAnswer();
+    },
+    ),
       ],
     );
   }

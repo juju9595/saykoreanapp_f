@@ -237,13 +237,15 @@ class _TestModePageState extends State<TestModePage> {
     final isDark = theme.brightness == Brightness.dark;
     final bg = theme.scaffoldBackgroundColor;
 
-    final bool isMintTheme =
-        !isDark && bg.value == const Color(0xFFE7FFF6).value;
+    // StudyPage 와 동일한 민트 테마 판별
+    final bool isMintTheme = !isDark &&
+        (themeColorNotifier.value == 'mint' ||
+            bg.value == const Color(0xFFE7FFF6).value);
 
-    final titleColor = theme.appBarTheme.foregroundColor ??
-        (isDark
-            ? scheme.onSurface
-            : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42)));
+    // StudyPage 의 titleColor 규칙과 동일
+    final Color titleColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF6B4E42));
 
     return Scaffold(
       backgroundColor: bg,
@@ -267,7 +269,8 @@ class _TestModePageState extends State<TestModePage> {
           : SafeArea(
         child: FooterSafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+            padding:
+            const EdgeInsets.fromLTRB(20, 10, 20, 24),
             child: _buildContent(theme),
           ),
         ),
@@ -306,13 +309,19 @@ class _TestModePageState extends State<TestModePage> {
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
     final bg = theme.scaffoldBackgroundColor;
-    final bool isMintTheme =
-        !isDark && bg.value == const Color(0xFFE7FFF6).value;
 
-    final Color sectionTitleColor =
-    isMintTheme ? const Color(0xFF2F7A69) : scheme.primary;
-    final Color sectionSubColor =
-    isMintTheme ? const Color(0xFF4E8476) : scheme.onSurface.withOpacity(0.6);
+    // StudyPage 와 동일한 민트 판별
+    final bool isMintTheme = !isDark &&
+        (themeColorNotifier.value == 'mint' ||
+            bg.value == const Color(0xFFE7FFF6).value);
+
+    // StudyPage 의 section/subtitle 컬러 규칙과 유사하게 맞춤
+    final Color sectionTitleColor = isDark
+        ? scheme.onSurface
+        : (isMintTheme ? const Color(0xFF2F7A69) : const Color(0xFF7C5A48));
+    final Color sectionSubColor = isDark
+        ? scheme.onSurface.withOpacity(0.7)
+        : (isMintTheme ? const Color(0xFF4E8476) : const Color(0xFF9C7C68));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -412,9 +421,9 @@ class _ModeTile extends StatelessWidget {
     final bg = theme.scaffoldBackgroundColor;
 
     // ✅ 민트 테마 판별: themeColorNotifier 값 + 배경색 둘 다 사용
-    final bool isMintTheme =
-        (!isDark && bg.value == const Color(0xFFE7FFF6).value) ||
-            (!isDark && themeColorNotifier.value == 'mint');
+    final bool isMintTheme = (!isDark &&
+        (themeColorNotifier.value == 'mint' ||
+            bg.value == const Color(0xFFE7FFF6).value));
 
     // 👉 StudyPage._StudyTile 과 동일한 톤
     Color cardBg = const Color(0xFFFFF5ED);
@@ -425,6 +434,7 @@ class _ModeTile extends StatelessWidget {
     Color arrowColor = const Color(0xFFCCB3A5);
 
     if (isMintTheme && !isDark) {
+      // 🌿 민트 테마
       cardBg = const Color(0xFFF4FFFA);
       badgeBg = const Color(0xFFE7FFF6);
       badgeText = const Color(0xFF2F7A69);
@@ -434,6 +444,7 @@ class _ModeTile extends StatelessWidget {
     }
 
     if (isDark) {
+      // 🌙 다크 테마
       cardBg = scheme.surfaceContainer;
       badgeBg = scheme.surfaceContainerHigh;
       badgeText = scheme.onSurface.withOpacity(0.8);
@@ -564,9 +575,9 @@ class _RegularTestTile extends StatelessWidget {
         .toString();
 
     // ✅ 민트 테마 판별: themeColorNotifier 값 + 배경색 둘 다 사용
-    final bool isMintTheme =
-        (!isDark && bg.value == const Color(0xFFE7FFF6).value) ||
-            (!isDark && themeColorNotifier.value == 'mint');
+    final bool isMintTheme = (!isDark &&
+        (themeColorNotifier.value == 'mint' ||
+            bg.value == const Color(0xFFE7FFF6).value));
 
     // 👉 StudyPage._StudyTile 팔레트 그대로
     Color cardBg = const Color(0xFFFFF5ED);

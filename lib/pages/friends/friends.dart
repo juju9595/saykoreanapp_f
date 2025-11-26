@@ -225,9 +225,10 @@ class _FriendsPageState extends State<FriendsPage>
       context,
       msg,
       backgroundColor: bg,
-      textColor: fg,
+      foregroundColor: fg, // ✅ 이름 맞추기
     );
   }
+
 
 
 
