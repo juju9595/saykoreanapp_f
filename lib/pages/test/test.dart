@@ -187,20 +187,22 @@ class _TestPageState extends State<TestPage> {
         setState(() => testRound = nextRound);
 
         list = await _loadRegularItems();
+
       }
+
 
       print("✅ 로드된 문항 수: ${list.length}");
 
       setState(() {
         items = list;
         idx = 0;
-        msg = items.isEmpty ? "문항이 없습니다." : "";
+        msg = items.isEmpty ? "test.empty".tr() : "";
       });
     } catch (e, st) {
       print("_loadQuestions error: $e");
       print(st);
       setState(() {
-        msg = "문항을 불러올 수 없습니다.";
+        msg = "test.loadError".tr();
         items = [];
       });
     } finally {
@@ -230,6 +232,7 @@ class _TestPageState extends State<TestPage> {
     }
   }
 
+
   // ♾️ [3-2] 무한모드 문항 로드
   Future<List<dynamic>> _loadInfiniteItems() async {
     final prefs = await SharedPreferences.getInstance();
@@ -240,7 +243,7 @@ class _TestPageState extends State<TestPage> {
         .where((n) => n != null && n! > 0)
         .cast<int>()
         .toList();
-
+    
     // 완료한 주제가 비어있으면
     if (studyNos.isEmpty) {
       print("⚠️ 무한모드 : 완료한 주제가 없습니다");
@@ -317,6 +320,7 @@ class _TestPageState extends State<TestPage> {
         widget.testMode == "INFINITE" || widget.testMode == "HARD";
     final bool isRegular = !isInfiniteHard;
 
+
     if (widget.testMode == "INFINITE" || widget.testMode == "HARD") {
       // 무한/하드모드: 모두 객관식
       questionType = 0;
@@ -360,7 +364,7 @@ class _TestPageState extends State<TestPage> {
 
       if (!mounted || result == null || result['ok'] != true) {
         setState(() {
-          msg = "답안 제출 실패";
+          msg = "test.submitError".tr();
           feedback = {
             "correct": false,
             "score": 0,
@@ -448,7 +452,7 @@ class _TestPageState extends State<TestPage> {
       print("submitAnswer error: $e");
       print(st);
       setState(() {
-        msg = "답안 제출 실패";
+        msg = "test.submitError".tr();
         feedback = {
           "correct": false,
           "score": 0,
@@ -496,26 +500,28 @@ class _TestPageState extends State<TestPage> {
 
   // 무한모드/하드모드 오답 시 종료 다이얼로그
   void _showGameOverDialog() {
+    final count = idx + 1;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("게임 오버"),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "무한모드 종료!\n${idx + 1}문제까지 도전했어요!"
-              : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // 다이얼로그 닫기
-              Navigator.pop(context); // 시험페이지 닫기
-            },
-            child: const Text("확인"),
+      builder: (context) =>
+          AlertDialog(
+            title: Text("test.gameover.title".tr()),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "test.gameover.infinite".tr(args: ["$count"])
+                  : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // 다이얼로그 닫기
+                  Navigator.pop(context); // 시험페이지 닫기
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -524,23 +530,24 @@ class _TestPageState extends State<TestPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text("🎉 완벽합니다!"),
-        content: Text(
-          widget.testMode == "INFINITE"
-              ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
-              : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text("확인"),
+      builder: (context) =>
+          AlertDialog(
+            title: const Text("🎉 완벽합니다!"),
+            content: Text(
+              widget.testMode == "INFINITE"
+                  ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
+                  : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                },
+                child: const Text("확인"),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -553,8 +560,7 @@ class _TestPageState extends State<TestPage> {
     // 🔥 locale 변경 시 이 페이지도 자동으로 rebuild 되도록 강제 의존
     print("🔍 TESTPAGE locale = ${context.locale}");
     print("🔍 supportedLocales = ${context.supportedLocales}");
-    print(
-        "🔍 delegates OK? = ${Localizations.of(context, WidgetsLocalizations)}");
+    print("🔍 delegates OK? = ${Localizations.of(context, WidgetsLocalizations)}");
 
     final _ = context.locale;
 
@@ -617,6 +623,8 @@ class _TestPageState extends State<TestPage> {
     final cardColor = isDark ? scheme.surface : Colors.white;
     final cardBorderColor =
     isDark ? scheme.outline.withOpacity(0.4) : const Color(0xFFE5E7EB);
+    final nextButtonBg = scheme.primaryContainer;
+    final nextButtonFg = scheme.onPrimaryContainer;
 
     return Scaffold(
       backgroundColor: bg,

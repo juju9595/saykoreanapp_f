@@ -117,10 +117,10 @@ class _LanguagePageState extends State<LanguagePage> {
       setState(() => _items = list);
     } on DioException catch (e) {
       if (!mounted) return;
-      setState(() => _error = e.message ?? '언어 목록을 불러오지 못했습니다.');
+      setState(() => _error = e.message ?? 'language.error.load'.tr());
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = '언어 목록을 불러오지 못했습니다.');
+      setState(() => _error = 'language.error.load'.tr());
     } finally {
       if (mounted) setState(() => _loading = false);
     }
