@@ -60,7 +60,7 @@ class _FindState extends State<FindPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("auth.tempPw.sent".tr()),
+          content: Text(response.data),
           duration: const Duration(seconds: 15),
         ),
       );
