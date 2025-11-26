@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:saykoreanapp_f/api/api.dart'; // ApiClient 사용
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DTO
@@ -168,8 +169,8 @@ class _StudyPageState extends State<StudyPage> {
       if (_genreNo == null || _genreNo! <= 0) {
         // 아래쪽에 안내 알림 띄우기
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('먼저 장르를 선택해주세요.'),
+          SnackBar(
+            content: Text("study.genre.selectFirst".tr()),
             duration: Duration(seconds: 2),
           ),
         );
@@ -186,7 +187,11 @@ class _StudyPageState extends State<StudyPage> {
 
       await _fetchSubjects(); // 목록 로드
     } catch (e) {
-      setState(() => _error = '초기화 실패: $e');
+      setState(() {
+        _error = "study.initFailed".tr(namedArgs: {
+          "error": e.toString(),
+        });
+      });
     } finally {
       setState(() => _loading = false);
     }
@@ -209,9 +214,9 @@ class _StudyPageState extends State<StudyPage> {
 
       setState(() => _subjects = list);
     } on DioException catch (e) {
-      setState(() => _error = e.message ?? '주제 목록을 가져오지 못했습니다.');
+      setState(() => _error = e.message ?? "study.topic.loadFailed".tr());
     } catch (_) {
-      setState(() => _error = '주제 목록을 가져오지 못했습니다.');
+      setState(() => _error = "study.topic.loadFailed".tr());
     }
   }
 
@@ -226,9 +231,9 @@ class _StudyPageState extends State<StudyPage> {
       setState(() =>
       _subject = StudyDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
-      setState(() => _error = e.message ?? '주제 상세를 불러오지 못했습니다.');
+      setState(() => _error = e.message ?? "study.topic.detailFailed".tr());
     } catch (_) {
-      setState(() => _error = '주제 상세를 불러오지 못했습니다.');
+      setState(() => _error = "study.topic.detailFailed".tr());
     }
   }
 
@@ -242,9 +247,9 @@ class _StudyPageState extends State<StudyPage> {
       setState(
               () => _exam = ExamDto.fromJson(Map<String, dynamic>.from(res.data)));
     } on DioException catch (e) {
-      setState(() => _error = e.message ?? '예문을 불러오지 못했습니다.');
+      setState(() => _error = e.message ?? "study.example.loadFailed".tr());
     } catch (_) {
-      setState(() => _error = '예문을 불러오지 못했습니다.');
+      setState(() => _error = "study.example.loadFailed".tr());
     }
   }
 
@@ -309,11 +314,17 @@ class _StudyPageState extends State<StudyPage> {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오디오를 재생할 수 없습니다: $e')),
+          SnackBar(
+            content: Text(
+              "study.audio.error".tr(namedArgs: {
+                "error": e.toString(),
+              }),
+            ),
+          ),
         );
       }
-    }
-  }
+    }  // ← catch 종료
+  }  // ← _play() 종료
 
   // 학습 완료 처리
   Future<void> _complete() async {
@@ -331,7 +342,7 @@ class _StudyPageState extends State<StudyPage> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('학습이 완료되었습니다!')),
+      SnackBar(content: Text("study.completed".tr())),
     );
 
     Navigator.pushNamed(context, '/successList');
@@ -345,6 +356,7 @@ class _StudyPageState extends State<StudyPage> {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
+
     final bg = theme.scaffoldBackgroundColor;
 
     // mintTheme 판별: 배경색 + notifier 둘 다 사용
@@ -375,7 +387,7 @@ class _StudyPageState extends State<StudyPage> {
         backgroundColor: bg,
         centerTitle: true,
         title: Text(
-          '학습',
+          "footer.study".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             color: titleColor,
             fontWeight: FontWeight.w700,
@@ -414,7 +426,7 @@ class _StudyPageState extends State<StudyPage> {
               ),
               const SizedBox(height: 16),
               Text(
-                "등록된 학습 주제가 아직 없어요.",
+                "study.topic.empty".tr(),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: subtitleColor,
                 ),
@@ -433,17 +445,17 @@ class _StudyPageState extends State<StudyPage> {
       itemBuilder: (context, index) {
         // 0번 인덱스: 상단 텍스트 영역
         if (index == 0) {
-          return const Padding(
+          return Padding(
             padding: EdgeInsets.only(bottom: 8.0),
             child: SKPageHeader(
-              title: "내 학습 목록",
-              subtitle: "학습할 주제를 하나 골라볼까요?",
+              title: "study.myList".tr(),
+              subtitle: "study.topic.pickOne".tr(),
             ),
           );
         }
 
         final s = _subjects[index - 1];
-        final label = s.themeSelected ?? s.themeKo ?? '제목 없음';
+        final label = s.themeSelected ?? s.themeKo ?? "study.noTitle".tr();
 
         return SKSelectTile(
           index: index, // 1,2,3,... 번호
@@ -471,7 +483,7 @@ class _StudyPageState extends State<StudyPage> {
   Widget _buildDetail(
       ThemeData theme, ColorScheme scheme, bool isDark, bool isMintTheme) {
     final t = _subject!;
-    final title = t.themeSelected ?? t.themeKo ?? '제목 없음';
+    final title = t.themeSelected ?? t.themeKo ?? "study.noTitle".tr();
 
     final mainTitleColor = isDark
         ? scheme.onSurface
@@ -498,7 +510,7 @@ class _StudyPageState extends State<StudyPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "오늘의 학습",
+            "study.today".tr(),
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w800,
               color: mainTitleColor,
@@ -506,14 +518,14 @@ class _StudyPageState extends State<StudyPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            "설명을 읽고 예문을 들으며 자연스럽게 익혀봐요.",
+            "study.description.long".tr(),
             style: theme.textTheme.bodySmall?.copyWith(
               color: subtitleColor,
             ),
           ),
           const SizedBox(height: 18),
           Text(
-            "주제 설명",
+            "study.topic.description".tr(),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: sectionColor,
@@ -565,7 +577,7 @@ class _StudyPageState extends State<StudyPage> {
 
           const SizedBox(height: 20),
           Text(
-            "예문 학습",
+            "study.example.study".tr(),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: sectionColor,
@@ -585,7 +597,7 @@ class _StudyPageState extends State<StudyPage> {
           const SizedBox(height: 20),
 
           Text(
-            "학습 완료",
+            "study.completeButton".tr(),
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
               color: sectionColor,
@@ -605,7 +617,7 @@ class _StudyPageState extends State<StudyPage> {
                 ),
                 elevation: 0,
               ),
-              child: const Text('학습 완료'),
+              child: Text("study.completeButton".tr()),
             ),
           ),
 
@@ -625,13 +637,14 @@ class _StudyPageState extends State<StudyPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('목록으로'),
+              child: Text( "common.backToList".tr()),
             ),
           ),
         ],
       ),
     );
   }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -911,7 +924,7 @@ class _ExamCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onPlayKo,
                   icon: const Text('🔊'),
-                  label: const Text('한국어'),
+                  label: Text("study.korAudio".tr()),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: outlineColor),
                     foregroundColor: btnFg,
@@ -923,7 +936,7 @@ class _ExamCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onPlayEn,
                   icon: const Text('🔊'),
-                  label: const Text('영어'),
+                  label: Text("study.engAudio".tr()),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: outlineColor),
                     foregroundColor: btnFg,
@@ -932,7 +945,9 @@ class _ExamCard extends StatelessWidget {
               ),
             ],
           ),
+
           const SizedBox(height: 10),
+
           Row(
             children: [
               Expanded(
@@ -943,7 +958,7 @@ class _ExamCard extends StatelessWidget {
                     foregroundColor: navFg,
                     elevation: 0,
                   ),
-                  child: const Text('이전'),
+                  child: Text("study.prev".tr()),
                 ),
               ),
               const SizedBox(width: 8),
@@ -955,7 +970,7 @@ class _ExamCard extends StatelessWidget {
                     foregroundColor: navFg,
                     elevation: 0,
                   ),
-                  child: const Text('다음'),
+                  child: Text("study.next".tr()),
                 ),
               ),
             ],

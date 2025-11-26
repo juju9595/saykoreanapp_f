@@ -109,7 +109,7 @@ class _TestPageState extends State<TestPage> {
     } catch (e) {
       print('❌ 오디오 재생 실패: $e');
       if (mounted) {
-        showFooterSnackBar(context, '오디오를 재생할 수 없어요.');
+        showFooterSnackBar(context, "test.audio.error".tr());
       }
     }
   }
@@ -223,13 +223,14 @@ class _TestPageState extends State<TestPage> {
     print("▶ findtestitem status = ${res.statusCode}");
     print("▶ findtestitem data   = ${res.data}");
 
-    if (res.data is List) {
-      return res.data as List;
-    } else if (res.data is Map && res.data['list'] is List) {
-      return res.data['list'] as List;
-    } else {
-      return [];
-    }
+
+      if (res.data is List) {
+        return res.data as List;
+      } else if (res.data is Map && res.data['list'] is List) {
+        return res.data['list'] as List;
+      } else {
+        return [];
+      }
   }
 
 
@@ -510,7 +511,7 @@ class _TestPageState extends State<TestPage> {
             content: Text(
               widget.testMode == "INFINITE"
                   ? "test.gameover.infinite".tr(args: ["$count"])
-                  : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+                  : "test.gameover.hard".tr(args: ["${idx + 1}"]),
             ),
             actions: [
               TextButton(
@@ -518,7 +519,7 @@ class _TestPageState extends State<TestPage> {
                   Navigator.pop(context); // 다이얼로그 닫기
                   Navigator.pop(context); // 시험페이지 닫기
                 },
-                child: const Text("확인"),
+                child: Text("common.confirm".tr()),
               ),
             ],
           ),
@@ -532,11 +533,11 @@ class _TestPageState extends State<TestPage> {
       barrierDismissible: false,
       builder: (context) =>
           AlertDialog(
-            title: const Text("🎉 완벽합니다!"),
+            title: Text("test.result.perfect".tr()),
             content: Text(
               widget.testMode == "INFINITE"
-                  ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
-                  : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
+                  ? "test.victory.infiniteAll".tr(args: ["${items.length}"])
+                  : "test.victory.hardAll".tr(args: ["${items.length}"]),
             ),
             actions: [
               TextButton(
@@ -544,7 +545,7 @@ class _TestPageState extends State<TestPage> {
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },
-                child: const Text("확인"),
+                child: Text("common.confirm".tr()),
               ),
             ],
           ),
@@ -606,14 +607,14 @@ class _TestPageState extends State<TestPage> {
     final String headerSubtitle;
 
     if (widget.testMode == "INFINITE") {
-      headerTitle = '♾️ 무한모드';
-      headerSubtitle = '완료한 주제에서 틀릴 때까지 도전해 보세요.';
+      headerTitle =  "exam.mode.infinite".tr();
+      headerSubtitle = "test.header.infiniteSubtitle".tr();
     } else if (widget.testMode == "HARD") {
-      headerTitle = '🔥 하드모드';
-      headerSubtitle = '전체 문항에서 틀릴 때까지 도전해 보세요.';
+      headerTitle = "exam.mode.hard".tr();
+      headerSubtitle = "test.header.hardSubtitle".tr();
     } else {
-      headerTitle = '오늘의 시험';
-      headerSubtitle = '문제를 풀고 자신의 실력을 확인해 보세요.';
+      headerTitle = "exam.today".tr();
+      headerSubtitle = "test.header.regularSubtitle".tr();
     }
 
     final titleColor = theme.appBarTheme.foregroundColor ??
@@ -634,7 +635,7 @@ class _TestPageState extends State<TestPage> {
         centerTitle: true,
         iconTheme: IconThemeData(color: titleColor),
         title: Text(
-          '시험',
+          "footer.test".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             color: titleColor,
             fontWeight: FontWeight.w700,
@@ -651,7 +652,7 @@ class _TestPageState extends State<TestPage> {
           ? FooterSafeArea(
         child: Center(
           child: Text(
-            msg.isEmpty ? "문항이 없습니다." : msg,
+            msg.isEmpty ? "exam.noQuestions".tr() : msg,
             style: TextStyle(color: subtitleColor),
           ),
         ),
@@ -665,8 +666,7 @@ class _TestPageState extends State<TestPage> {
               // 🔥 상단 공통 헤더 (학습/시험모드와 톤 통일)
               SKPageHeader(
                 title: headerTitle,
-                subtitle: headerSubtitle,
-              ),
+                subtitle: headerSubtitle,),
               const SizedBox(height: 18),
 
               // 진행도
@@ -730,9 +730,9 @@ class _TestPageState extends State<TestPage> {
                               ),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
-                              const Center(
+                              Center(
                                 child:
-                                Text('이미지를 불러올 수 없어요'),
+                                Text("exam.image.error".tr()),
                               ),
                             ),
                           ),
@@ -763,7 +763,7 @@ class _TestPageState extends State<TestPage> {
                                     _playAudio(audio['audioPath']);
                                   },
                                   icon: const Text('🔊'),
-                                  label: const Text('음성 듣기'),
+                                  label: Text("test.audio.play".tr()),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: titleColor,
                                     side: BorderSide(
@@ -831,8 +831,8 @@ class _TestPageState extends State<TestPage> {
                       ),
                       child: Text(
                         feedback!['correct']
-                            ? "정답입니다!"
-                            : "틀렸어요 😢",
+                            ? "test.correct".tr()
+                            : "test.wrong".tr(),
                         style: TextStyle(
                           color: feedback!['correct']
                               ? Colors
@@ -849,8 +849,8 @@ class _TestPageState extends State<TestPage> {
                     // 🔥 공통 기본 버튼 사용 (테마/민트 자동 반영)
                     SKPrimaryButton(
                       label: idx < items.length - 1
-                          ? "다음 문제"
-                          : "결과 보기",
+                          ? "test.next".tr()
+                          : "test.result.view".tr(),
                       onPressed: goNext,
                     ),
                   ],
@@ -885,7 +885,7 @@ class _TestPageState extends State<TestPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "정답을 골라보세요",
+          "test.multiple.title".tr(),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -901,7 +901,7 @@ class _TestPageState extends State<TestPage> {
               final map = opt as Map<String, dynamic>;
               final label = map['examSelected'] ??
                   map['examKo'] ??
-                  "보기 로드 실패";
+                  "test.options.loadError.short".tr();
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: _ChoiceButton(
@@ -917,7 +917,7 @@ class _TestPageState extends State<TestPage> {
             }).toList(),
           )
         else
-          const Text("보기 불러오기 실패"),
+          Text("test.options.loadError.long".tr()),
       ],
     );
   }
@@ -932,7 +932,7 @@ class _TestPageState extends State<TestPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "한국어로 답을 입력해 보세요",
+          "test.subjective.title".tr(),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -950,7 +950,7 @@ class _TestPageState extends State<TestPage> {
             });
           },
           decoration: InputDecoration(
-            hintText: "한국어로 답변을 작성하세요",
+            hintText: "test.subjective.hint".tr(),
             border: const OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
@@ -964,7 +964,7 @@ class _TestPageState extends State<TestPage> {
 
         // 공통 기본 버튼 사용 (themeColor 따라 자동 변경)
     SKPrimaryButton(
-    label: '제출',
+    label: "test.submit".tr(),
     onPressed: () {
     if (subjective.trim().isEmpty || submitting) return;
     submitAnswer();

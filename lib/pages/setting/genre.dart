@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 // ─────────────────────────────────────────────────────────────
 // DTO
@@ -123,7 +124,7 @@ class _GenreState extends State<GenrePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          '장르 선택',
+          "genre.title".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -155,7 +156,7 @@ class _GenreState extends State<GenrePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            '에러가 발생했어요',
+            "common.errorOccurred".tr(),
             style: theme.textTheme.titleMedium?.copyWith(
               color: scheme.error,
               fontWeight: FontWeight.bold,
@@ -171,7 +172,7 @@ class _GenreState extends State<GenrePage> {
           ),
           const SizedBox(height: 20),
           SKPrimaryButton(
-            label: '다시 시도',
+            label: "common.retry".tr(),
             onPressed: _fetchGenres,
           ),
         ],
@@ -186,16 +187,16 @@ class _GenreState extends State<GenrePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SKPageHeader(
-            title: '장르 선택',
-            subtitle: '관심 있는 장르를 선택하면 학습 추천에 활용돼요.',
+          SKPageHeader(
+            title: "genre.title".tr(),
+            subtitle: "genre.selectHint".tr(),
           ),
           const SizedBox(height: 20),
           Expanded(
             child: _items.isEmpty
                 ? Center(
               child: Text(
-                '등록된 장르가 없습니다.',
+                "genre.empty".tr(),
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: scheme.onSurface.withOpacity(0.6),
                 ),

@@ -9,6 +9,7 @@ import 'package:saykoreanapp_f/pages/setting/genre.dart';
 import 'package:saykoreanapp_f/pages/setting/language.dart';
 import 'package:saykoreanapp_f/pages/study/successList.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 // ✅ 공통 UI (헤더/푸터 패딩 + 테마 상태)
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart';
@@ -238,7 +239,7 @@ class _MyPageState extends State<MyPage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "마이페이지",
+          "mypage.title".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -256,9 +257,9 @@ class _MyPageState extends State<MyPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SKPageHeader(
-                  title: "내 계정",
-                  subtitle: "프로필과 학습 환경을 한 곳에서 관리해요.",
+                SKPageHeader(
+                  title:  "mypage.title".tr(),
+                  subtitle: "mypage.description".tr(),
                 ),
                 const SizedBox(height: 20),
 
@@ -268,12 +269,12 @@ class _MyPageState extends State<MyPage> {
                 const SizedBox(height: 24),
 
                 // 계정 설정
-                const _SectionTitle("계정 설정"),
+                _SectionTitle("mypage.section.account".tr()),
                 const SizedBox(height: 8),
                 _SettingCard(
                   icon: Icons.person_outline,
-                  title: "정보 수정",
-                  subtitle: "닉네임, 전화번호, 비밀번호 등을 변경할 수 있어요.",
+                  title: "mypage.updateInfo".tr(),
+                  subtitle: "mypage.updateInfoDesc".tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -287,12 +288,12 @@ class _MyPageState extends State<MyPage> {
                 const SizedBox(height: 24),
 
                 // 학습 설정
-                const _SectionTitle("학습 설정"),
+                _SectionTitle("mypage.section.study".tr()),
                 const SizedBox(height: 8),
                 _SettingCard(
                   icon: Icons.category_outlined,
-                  title: "장르 설정",
-                  subtitle: "관심 있는 학습 주제를 선택해요.",
+                  title: "mypage.selectGenre".tr(),
+                  subtitle: "mypage.selectGenreDesc".tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -305,8 +306,8 @@ class _MyPageState extends State<MyPage> {
                 const SizedBox(height: 10),
                 _SettingCard(
                   icon: Icons.language_outlined,
-                  title: "언어 설정",
-                  subtitle: "앱에서 사용할 학습 언어를 바꿔요.",
+                  title: "mypage.selectLanguage".tr(),
+                  subtitle: "mypage.selectLanguageDesc".tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -320,12 +321,12 @@ class _MyPageState extends State<MyPage> {
                 const SizedBox(height: 24),
 
                 // 학습 기록
-                const _SectionTitle("학습 기록"),
+                _SectionTitle("mypage.section.record".tr()),
                 const SizedBox(height: 8),
                 _SettingCard(
                   icon: Icons.emoji_events_outlined,
-                  title: "완수한 주제 목록",
-                  subtitle: "지금까지 끝낸 학습 주제를 다시 확인해요.",
+                  title: "mypage.mySuccessedStudy".tr(),
+                  subtitle: "mypage.mySuccessedStudyDesc".tr(),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -390,7 +391,7 @@ class _MyPageState extends State<MyPage> {
                 Icon(Icons.person, color: titleColor, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  "닉네임",
+                  "mypage.nickname".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: labelColor,
                   ),
@@ -414,7 +415,7 @@ class _MyPageState extends State<MyPage> {
                 Icon(Icons.calendar_today, color: titleColor, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  "가입일자",
+                  "mypage.joinDate".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: labelColor,
                   ),
@@ -438,7 +439,7 @@ class _MyPageState extends State<MyPage> {
                 Icon(Icons.calendar_month, color: titleColor, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  "총 출석 일수",
+                  "mypage.totalAttendance".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: labelColor,
                   ),
@@ -447,7 +448,11 @@ class _MyPageState extends State<MyPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              attendDay != null ? "${attendDay}일" : "정보 없음",
+              attendDay != null
+                  ? "common.daysSuffix".tr(
+                namedArgs: {"value": attendDay.toString()},
+              )
+                  : "common.noInfo".tr(),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: titleColor,
@@ -462,7 +467,7 @@ class _MyPageState extends State<MyPage> {
                 Icon(Icons.trending_up, color: titleColor, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  "현재 연속 출석 일수",
+                  "mypage.currentStreak".tr(),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: labelColor,
                   ),
@@ -471,7 +476,9 @@ class _MyPageState extends State<MyPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              maxStreak != null ? "${maxStreak}일" : "정보 없음",
+              maxStreak != null
+                  ? "common.daysSuffix".tr(namedArgs: {"value": maxStreak.toString()})
+                  : "common.noInfo".tr(),
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: titleColor,
