@@ -1,5 +1,6 @@
 // lib/pages/auth/find_page.dart
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field_v2/intl_phone_field.dart';
 import 'package:intl_phone_field_v2/phone_number.dart';
@@ -59,7 +60,7 @@ class _FindState extends State<FindPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('찾으시는 이메일은 : ${response.data} 입니다.'),
+          content: Text("auth.tempPw.sent".tr()),
           duration: const Duration(seconds: 15),
         ),
       );
@@ -67,8 +68,8 @@ class _FindState extends State<FindPage> {
       print("오류발생 : 이메일 찾기 실패, $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이메일 찾기에 실패했어요. 다시 시도해주세요.'),
+        SnackBar(
+          content: Text("auth.tempPw.error".tr()),
         ),
       );
     }
@@ -96,8 +97,8 @@ class _FindState extends State<FindPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('임시 비밀번호가 이메일로 발급되었습니다.'),
+        SnackBar(
+          content: Text("auth.tempPw.sent".tr()),
           duration: Duration(seconds: 15),
         ),
       );
@@ -105,8 +106,8 @@ class _FindState extends State<FindPage> {
       print("오류발생 : 비밀번호 찾기 실패, $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('비밀번호 찾기에 실패했어요. 다시 시도해주세요.'),
+        SnackBar(
+          content: Text("auth.tempPw.error".tr()),
         ),
       );
     }
@@ -125,7 +126,7 @@ class _FindState extends State<FindPage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "이메일 / 비밀번호 찾기",
+          "login.find".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -142,9 +143,9 @@ class _FindState extends State<FindPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SKPageHeader(
-                title: '계정 찾기',
-                subtitle: '가입 시 입력하신 정보로 이메일과 비밀번호를 찾아드려요.',
+              SKPageHeader(
+                title: "auth.findAccount.title".tr(),
+                subtitle: "auth.findAccount.subtitle".tr(),
               ),
               const SizedBox(height: 24),
 
@@ -152,8 +153,8 @@ class _FindState extends State<FindPage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '이메일 찾기',
-                description: '이름과 전화번호를 입력하면\n가입한 이메일을 알려드려요.',
+                title: "account.findEmailTitle".tr(),
+                description: "auth.findEmail.description".tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -161,7 +162,7 @@ class _FindState extends State<FindPage> {
                       theme: theme,
                       scheme: scheme,
                       controller: name1Con,
-                      label: '이름',
+                      label: "account.name".tr(),
                     ),
                     const SizedBox(height: 12),
                     _buildPhoneField(
@@ -177,7 +178,7 @@ class _FindState extends State<FindPage> {
                     // 살구색 공통 버튼
                     const SizedBox(height: 4),
                     SKPrimaryButton(
-                      label: '이메일 찾기',
+                      label: "account.findEmailTitle".tr(),
                       onPressed: onFindEmail,
                     ),
                   ],
@@ -190,8 +191,8 @@ class _FindState extends State<FindPage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '비밀번호 찾기',
-                description: '이름, 전화번호, 이메일을 입력하면\n임시 비밀번호를 보내드려요.',
+                title: "account.findPasswordTitle".tr(),
+                description: "auth.findPw.description".tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -199,7 +200,7 @@ class _FindState extends State<FindPage> {
                       theme: theme,
                       scheme: scheme,
                       controller: name2Con,
-                      label: '이름',
+                      label: "account.name".tr(),
                     ),
                     const SizedBox(height: 12),
                     _buildPhoneField(
@@ -216,11 +217,11 @@ class _FindState extends State<FindPage> {
                       theme: theme,
                       scheme: scheme,
                       controller: emailCon,
-                      label: '이메일',
+                      label: "findpage.checkEmail".tr(),
                     ),
                     const SizedBox(height: 16),
                     SKPrimaryButton(
-                      label: '비밀번호 찾기',
+                      label: "account.findPasswordTitle".tr(),
                       onPressed: onFindPass,
                     ),
                   ],

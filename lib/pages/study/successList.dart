@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saykoreanapp_f/api/api.dart';   // ApiClient.dio
 import 'study.dart';                           // StudyDto 사용
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ SKPageHeader, SKPrimaryButton, FooterSafeArea
-
+import 'package:easy_localization/easy_localization.dart';
 // ─────────────────────────────────────────────────────────────
 // 학습 완료한 주제 목록 페이지
 // ─────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
     } catch (e) {
       // 전체 로딩 중에 에러가 난 경우
       setState(() {
-        _error = '완수한 주제 목록을 불러오는 중 문제가 발생했어요.';
+        _error = "study.completedList.error".tr();
       });
     } finally {
       if (mounted) {
@@ -129,9 +129,9 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SKPageHeader(
-                  title: '완수한 주제',
-                  subtitle: '이미 학습을 마친 주제 목록이에요.',
+                SKPageHeader(
+                  title: "study.completedList.title".tr(),
+                  subtitle: "study.completedList.subtitle".tr(),
                 ),
                 const SizedBox(height: 16),
                 Expanded(child: _buildBody(context)),
@@ -168,9 +168,9 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
               style: const TextStyle(color: Colors.red),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             SKPrimaryButton(
-              label: '다시 시도',
+              label:  "common.retry".tr(),
               onPressed: _bootstrap,
             ),
           ],
@@ -180,8 +180,8 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
 
     // 3) 완료한 주제가 하나도 없는 경우
     if (_studies.isEmpty) {
-      return const Center(
-        child: Text('완수한 주제가 아직 없습니다.'),
+      return Center(
+        child: Text("successList.empty".tr()),
       );
     }
 
@@ -191,7 +191,9 @@ class _SuccessExamListPageState extends State<SuccessListPage> {
       separatorBuilder: (_, __) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final s = _studies[index];
-        final title = s.themeSelected ?? s.themeKo ?? '주제 #${s.studyNo}';
+        final title = s.themeSelected
+            ?? s.themeKo
+            ?? "${'study.topic.default'.tr()} #${s.studyNo}";
 
         return Card(
           elevation: 1,

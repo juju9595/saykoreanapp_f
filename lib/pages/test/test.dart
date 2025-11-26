@@ -516,7 +516,7 @@ class _TestPageState extends State<TestPage> {
             content: Text(
               widget.testMode == "INFINITE"
                   ? "test.gameover.infinite".tr(args: ["$count"])
-                  : "하드모드 종료!\n${idx + 1}문제까지 도전했어요!",
+                  : "test.gameover.hard".tr(args: ["${idx + 1}"]),
             ),
             actions: [
               TextButton(
@@ -524,7 +524,7 @@ class _TestPageState extends State<TestPage> {
                   Navigator.pop(context); // 다이얼로그 닫기
                   Navigator.pop(context); // 시험페이지 닫기
                 },
-                child: const Text("확인"),
+                child: Text("common.confirm".tr()),
               ),
             ],
           ),
@@ -538,11 +538,11 @@ class _TestPageState extends State<TestPage> {
       barrierDismissible: false,
       builder: (context) =>
           AlertDialog(
-            title: const Text("🎉 완벽합니다!"),
+            title: Text("test.result.perfect".tr()),
             content: Text(
               widget.testMode == "INFINITE"
-                  ? "무한모드 모든 문제 정답! \n${items.length}문제 클리어!"
-                  : "하드모드 모든 문제 정답! \n${items.length}문제 클리어!",
+                  ? "test.victory.infiniteAll".tr(args: ["${items.length}"])
+                  : "test.victory.hardAll".tr(args: ["${items.length}"]),
             ),
             actions: [
               TextButton(
@@ -550,7 +550,7 @@ class _TestPageState extends State<TestPage> {
                   Navigator.pop(context);
                   Navigator.pop(context);
                 },
-                child: const Text("확인"),
+                child: Text("common.confirm".tr()),
               ),
             ],
           ),
@@ -634,10 +634,10 @@ class _TestPageState extends State<TestPage> {
         iconTheme: IconThemeData(color: titleColor),
         title: Text(
           widget.testMode == "INFINITE"
-              ? '♾️ 무한모드'
+              ? "exam.mode.infinite".tr()
               : widget.testMode == "HARD"
-              ? '🔥 하드모드'
-              : '📝 정기시험',
+              ? "exam.mode.hard".tr()
+              : "exam.mode.regular".tr(),
           style: TextStyle(
             color: titleColor,
             fontWeight: FontWeight.w700,
@@ -649,7 +649,7 @@ class _TestPageState extends State<TestPage> {
           : items.isEmpty
           ? Center(
         child: Text(
-          msg.isEmpty ? "문항이 없습니다." : msg,
+          msg.isEmpty ? "exam.noQuestions".tr() : msg,
           style: TextStyle(color: subtitleColor),
         ),
       )
@@ -662,10 +662,10 @@ class _TestPageState extends State<TestPage> {
               // 상단 타이틀
               Text(
                 widget.testMode == "INFINITE"
-                    ? "♾️ 무한모드"
+                    ? "exam.mode.infinite".tr()
                     : widget.testMode == "HARD"
-                    ? "🔥 하드모드"
-                    : "📝 오늘의 시험",
+                    ? "exam.mode.hard".tr()
+                    : "exam.today".tr(),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -676,8 +676,8 @@ class _TestPageState extends State<TestPage> {
               Text(
                 widget.testMode == "INFINITE" ||
                     widget.testMode == "HARD"
-                    ? "틀릴 때까지 계속 도전해요!"
-                    : "문제를 풀고 자신의 실력을 확인해 보아요.",
+                    ? "exam.desc.infinite".tr()
+                    : "exam.desc.default".tr(),
                 style: TextStyle(
                   fontSize: 13,
                   color: subtitleColor,
@@ -743,9 +743,9 @@ class _TestPageState extends State<TestPage> {
                               ),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
-                              const Center(
+                              Center(
                                 child:
-                                Text('이미지를 불러올 수 없어요'),
+                                Text("exam.image.error".tr()),
                               ),
                             ),
                           ),
@@ -771,7 +771,7 @@ class _TestPageState extends State<TestPage> {
                                   },
                                   icon: const Text('🔊'),
                                   label:
-                                  const Text('음성 듣기'),
+                                  Text("test.audio.play".tr()),
                                   style:
                                   OutlinedButton.styleFrom(
                                     foregroundColor:
@@ -838,8 +838,8 @@ class _TestPageState extends State<TestPage> {
                       ),
                       child: Text(
                         feedback!['correct']
-                            ? "정답입니다!"
-                            : "틀렸어요 😢",
+                            ? "test.correct".tr()
+                            : "test.wrong".tr(),
                         style: TextStyle(
                           color: feedback!['correct']
                               ? Colors.green.shade900
@@ -866,8 +866,8 @@ class _TestPageState extends State<TestPage> {
                           idx <
                               items.length -
                                   1
-                              ? "다음 문제"
-                              : "결과 보기",
+                              ? "test.next".tr()
+                              : "test.result.view".tr(),
                         ),
                       ),
                     ),
@@ -901,7 +901,7 @@ class _TestPageState extends State<TestPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "정답을 골라보세요",
+          "test.multiple.title".tr(),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -920,7 +920,7 @@ class _TestPageState extends State<TestPage> {
               final map = opt as Map<String, dynamic>;
               final label = map['examSelected'] ??
                   map['examKo'] ??
-                  "보기 로드 실패";
+                  "test.options.loadError.short".tr();
               return _ChoiceButton(
                 label: label.toString(),
                 onTap: feedback == null
@@ -934,7 +934,7 @@ class _TestPageState extends State<TestPage> {
             }).toList(),
           )
         else
-          const Text("보기 불러오기 실패"),
+          Text("test.options.loadError.long".tr()),
       ],
     );
   }
@@ -950,7 +950,7 @@ class _TestPageState extends State<TestPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          "한국어로 답을 입력해 보세요",
+          "test.subjective.title".tr(),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,
@@ -968,7 +968,7 @@ class _TestPageState extends State<TestPage> {
             });
           },
           decoration: InputDecoration(
-            hintText: "한국어로 답변을 작성하세요",
+            hintText: "test.subjective.hint".tr(),
             border: const OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
@@ -994,7 +994,7 @@ class _TestPageState extends State<TestPage> {
               elevation: 0,
             ),
             child:
-            Text(submitting ? "로딩 중..." : "제출"),
+            Text(submitting ? "common.loading".tr() : "test.submit".tr()),
           ),
         ),
       ],

@@ -106,7 +106,7 @@ class _LoginState extends State<LoginPage> {
       }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그인 중 오류가 발생했습니다.')),
+        SnackBar(content: Text("login.error.general".tr())),
       );
     }
   }
@@ -129,17 +129,17 @@ class _LoginState extends State<LoginPage> {
           response.data != null &&
           response.data == 1) {
         Fluttertoast.showToast(
-          msg: "출석이 완료되었습니다.",
+          msg: "attendance.success".tr(),
           backgroundColor: Colors.greenAccent,
         );
       } else if (response.statusCode == 222) {
         Fluttertoast.showToast(
-          msg: "이미 출석이 완료되었습니다.",
+          msg: "attendance.already".tr(),
           backgroundColor: Colors.red,
         );
       } else {
         Fluttertoast.showToast(
-          msg: "출석 체크 중 오류가 발생하였습니다.",
+          msg: "attendance.error".tr(),
           backgroundColor: Colors.red,
         );
       }
@@ -164,7 +164,7 @@ class _LoginState extends State<LoginPage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "로그인",
+          "login.button".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -180,9 +180,9 @@ class _LoginState extends State<LoginPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SKPageHeader(
-                title: '다시 만나 반가워요!',
-                subtitle: '등록한 이메일과 비밀번호로 로그인해 주세요.',
+              SKPageHeader(
+                title: "login.welcomeBack".tr(),
+                subtitle: "login.notice".tr(),
               ),
               const SizedBox(height: 24),
 
@@ -190,8 +190,8 @@ class _LoginState extends State<LoginPage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '이메일 로그인',
-                description: 'SayKorean 계정으로 바로 로그인할 수 있어요.',
+                title: "login.emailLogin".tr(),
+                description: "login.emailLogin.description".tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -199,7 +199,7 @@ class _LoginState extends State<LoginPage> {
                       theme: theme,
                       scheme: scheme,
                       controller: emailCon,
-                      label: '이메일',
+                      label: "findpage.checkEmail".tr(),
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 12),
@@ -207,7 +207,7 @@ class _LoginState extends State<LoginPage> {
                       theme: theme,
                       scheme: scheme,
                       controller: pwdCont,
-                      label: '비밀번호',
+                      label: "findpage.password".tr(),
                       obscure: true,
                     ),
                     const SizedBox(height: 16),
@@ -225,8 +225,8 @@ class _LoginState extends State<LoginPage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '도움이 필요하신가요?',
-                description: '계정이 없거나 비밀번호를 잊어버리셨나요?',
+                title: "login.help".tr(),
+                description: "login.helpDetail".tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [

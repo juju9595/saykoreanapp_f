@@ -11,6 +11,7 @@ import 'package:saykoreanapp_f/api/api.dart';
 import 'package:saykoreanapp_f/pages/auth/login_page.dart';
 import 'package:saykoreanapp_f/pages/setting/myPage.dart';
 import 'package:saykoreanapp_f/ui/saykorean_ui.dart'; // ✅ 공통 UI (헤더/버튼)
+import 'package:easy_localization/easy_localization.dart';
 
 // ─────────────────────────────────────────────────────────────
 // 내 정보 수정 페이지
@@ -76,12 +77,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         return AlertDialog(
           shape:
           RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text("정말 탈퇴하시겠습니까?"),
+          title: Text("mypage.delete.confirmTitle".tr()),
           content: TextField(
             controller: controller,
             obscureText: true,
-            decoration: const InputDecoration(
-              hintText: "비밀번호를 입력해주세요.",
+            decoration: InputDecoration(
+              hintText: "mypage.delete.passwordHint".tr(),
             ),
           ),
           actions: [
@@ -89,13 +90,13 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text("취소"),
+              child: Text("common.cancel".tr()),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context, controller.text);
               },
-              child: const Text("확인"),
+              child: Text("common.confirm".tr()),
             ),
           ],
         );
@@ -123,12 +124,12 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           phoneCheck = true;
         });
         Fluttertoast.showToast(
-          msg: "전화번호 사용이 가능합니다.",
+          msg: "signuppage.ablePhone".tr(),
           backgroundColor: Colors.greenAccent,
         );
       } else {
         Fluttertoast.showToast(
-          msg: "전화번호 형식이 올바르지 않거나, 사용 중인 전화번호입니다.",
+          msg: "signuppage.phoneFormatOrUsed".tr(),
           backgroundColor: Colors.red,
         );
       }
@@ -144,7 +145,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         nickCon.text.trim().isEmpty ||
         phoneCon.text.trim().isEmpty) {
       Fluttertoast.showToast(
-        msg: "입력값을 채워주세요.",
+        msg: "common.fillRequired".tr(),
         backgroundColor: Colors.red,
       );
       // ignore: avoid_print
@@ -165,7 +166,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
 
       if (isPhoneChanged && !phoneCheck) {
         Fluttertoast.showToast(
-          msg: "전화번호 중복 확인을 해주세요.",
+          msg:  "common.checkPhoneDup".tr(),
           backgroundColor: Colors.red,
         );
         return;
@@ -195,7 +196,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           response.data != null &&
           response.data == 1) {
         Fluttertoast.showToast(
-          msg: "수정이 완료되었습니다.",
+          msg: "myinfoupdate.updateUser".tr(),
           backgroundColor: Colors.greenAccent,
         );
         if (!mounted) return;
@@ -205,7 +206,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       } else {
         Fluttertoast.showToast(
-          msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",
+          msg: "myinfoupdate.updateFailed".tr(),
           backgroundColor: Colors.red,
         );
       }
@@ -221,7 +222,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         newPassCon.text.trim().isEmpty ||
         checkPassCon.text.trim().isEmpty) {
       Fluttertoast.showToast(
-        msg: "입력값을 채워주세요.",
+        msg: "common.fillRequired".tr(),
         backgroundColor: Colors.red,
       );
       // ignore: avoid_print
@@ -233,14 +234,14 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
       print(
           "비밀번호 불일치 , 새 비밀번호: ${newPassCon.text}, 비밀번호 확인: ${checkPassCon.text} ");
       Fluttertoast.showToast(
-        msg: "비밀번호가 일치하지 않습니다.",
+        msg: "common.passwordNotMatch".tr(),
         backgroundColor: Colors.red,
       );
       return;
     }
     if (newPassCon.text.length < 8 || checkPassCon.text.length < 8) {
       Fluttertoast.showToast(
-        msg: "8자 이상 비밀번호를 입력해주세요.",
+        msg: "common.passwordMinLength".tr(),
         backgroundColor: Colors.red,
       );
       return;
@@ -264,7 +265,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
 
       if (response.statusCode == 200 && response.data != null) {
         Fluttertoast.showToast(
-          msg: "수정이 완료되었습니다.",
+          msg: "myinfoupdate.updateUser".tr(),
           backgroundColor: Colors.greenAccent,
         );
         if (!mounted) return;
@@ -274,7 +275,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         );
       } else {
         Fluttertoast.showToast(
-          msg: "수정이 실패했습니다. 올바른 값을 입력해주세요.",
+          msg:  "myinfoupdate.updateFailed".tr(),
           backgroundColor: Colors.red,
         );
       }
@@ -291,7 +292,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
 
       if (inputPassword == null || inputPassword.trim().isEmpty) {
         Fluttertoast.showToast(
-          msg: "취소되었습니다.",
+          msg:  "common.canceled".tr(),
           backgroundColor: Colors.red,
         );
         return;
@@ -309,13 +310,13 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
 
       if (response.statusCode == 200 && response.data == 1) {
         Fluttertoast.showToast(
-          msg: "회원 탈퇴가 완료되었습니다.",
+          msg: "myinfoupdate.removeSignup".tr(),
           backgroundColor: Colors.greenAccent,
         );
         _logOut(); // 탈퇴 후 로그아웃
       } else {
         Fluttertoast.showToast(
-          msg: "비밀번호가 올바르지 않습니다.",
+          msg:  "common.passwordInvalid".tr(),
           backgroundColor: Colors.red,
         );
       }
@@ -400,7 +401,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "내 정보",
+          "footer.myPage".tr(),
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w700,
             color: theme.appBarTheme.foregroundColor ?? scheme.primary,
@@ -416,9 +417,9 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SKPageHeader(
-                title: '내 정보 관리',
-                subtitle: '닉네임과 연락처, 비밀번호를 변경할 수 있어요.',
+              SKPageHeader(
+                title: "myinfoupdate.title".tr(),
+                subtitle: 'mypage.updateInfoDesc'.tr(),
               ),
               const SizedBox(height: 24),
 
@@ -426,8 +427,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '기본 정보',
-                description: '닉네임과 전화번호를 수정할 수 있어요.',
+                title: "myinfoupdate.basicInfo".tr(),
+                description: "myinfoupdate.basicInfoDesc".tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -435,14 +436,14 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       theme: theme,
                       scheme: scheme,
                       controller: nameCon,
-                      label: '이름',
+                      label: 'account.name'.tr(),
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: 12),
                     _buildTextField(
                       theme: theme,
                       scheme: scheme,
                       controller: nickCon,
-                      label: '닉네임',
+                      label: 'ranking.th.nickname'.tr(),
                     ),
                     const SizedBox(height: 12),
                     _buildPhoneField(theme, scheme),
@@ -462,7 +463,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: const Text("전화번호 중복 확인"),
+                        child: Text("myinfoupdate.checkPhoneDup".tr()),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -482,7 +483,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: const Text("정보 수정"),
+                        child:Text("myinfoupdate.updateInfo".tr()),
                       ),
                     ),
                   ],
@@ -495,8 +496,8 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '비밀번호 변경',
-                description: '현재 비밀번호를 확인한 후 새 비밀번호를 설정해 주세요.',
+                title: "myinfoupdate.changePassword".tr(),
+                description: "myinfoupdate.changePasswordDesc".tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -504,7 +505,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       theme: theme,
                       scheme: scheme,
                       controller: currentPassCon,
-                      label: '기존 비밀번호',
+                      label: "myInfoUpdate.oldPassword".tr(),
                       obscure: true,
                     ),
                     const SizedBox(height: 10),
@@ -512,7 +513,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       theme: theme,
                       scheme: scheme,
                       controller: newPassCon,
-                      label: '새 비밀번호 (8자 이상)',
+                      label: "myinfoupdate.newPasswordHint".tr(),
                       obscure: true,
                     ),
                     const SizedBox(height: 10),
@@ -520,7 +521,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                       theme: theme,
                       scheme: scheme,
                       controller: checkPassCon,
-                      label: '새 비밀번호 확인',
+                      label:  "myInfoUpdate.checkNewPassword".tr(),
                       obscure: true,
                     ),
                     const SizedBox(height: 12),
@@ -540,7 +541,7 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: const Text("비밀번호 수정"),
+                        child: Text("myInfoUpdate.updatePassword".tr()),
                       ),
                     ),
                   ],
@@ -553,21 +554,21 @@ class _InfoUpdateState extends State<MyInfoUpdatePage> {
               _buildCard(
                 theme: theme,
                 scheme: scheme,
-                title: '회원 탈퇴',
-                description: '탈퇴 시 계정 정보와 포인트, 랭킹 기록 등이 삭제될 수 있어요.',
+                title:  "myInfoUpdate.deleteUser".tr(),
+                description: "myinfoupdate.deleteInfoWarning".tr(),
                 accentColor: scheme.error,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      "탈퇴 후에는 일부 데이터를 복구할 수 없습니다.",
+                    "myinfoupdate.deleteInfoWarning2".tr(),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withOpacity(0.75),
                       ),
                     ),
                     const SizedBox(height: 16),
                     SKPrimaryButton(
-                      label: '회원 탈퇴',
+                      label: "myInfoUpdate.deleteUser".tr(),
                       onPressed: deleteUserStatus,
                     ),
                   ],
