@@ -331,8 +331,8 @@ class TestResultPage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
-                                child: const Text(
-                                  '다시 풀기',
+                                child: Text(
+                                  "exam.retry".tr(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -360,8 +360,8 @@ class TestResultPage extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
-                                child: const Text(
-                                  '시험 목록으로',
+                                child: Text(
+                                  "exam.list".tr(),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w600,
                                   ),

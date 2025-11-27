@@ -390,7 +390,9 @@
   "theme.change": "テーマ変更",
   "store.lack": "ポイント不足",
   "store.title": "ストア",
-  "language.saved": "選択した言語: {name} ({code}) を保存しました"
+  "language.saved": "選択した言語: {name} ({code}) を保存しました",
+  "exam.retry": "もう一度解く",
+  "exam.list": "試験一覧へ"
 
 
 

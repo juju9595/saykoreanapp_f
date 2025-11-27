@@ -388,6 +388,8 @@
   "theme.change": "테마 변경",
   "store.lack": "포인트 부족",
   "store.title": "스토어",
-  "language.saved": "선택한 언어: {name} ({code}) 저장됨"
+  "language.saved": "선택한 언어: {name} ({code}) 저장됨",
+  "exam.retry": "다시 풀기",
+  "exam.list": "시험 목록으로"
 
 }

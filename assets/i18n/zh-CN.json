@@ -384,7 +384,9 @@
   "theme.change": "更改主题",
   "store.lack": "点数不足",
   "store.title": "商城",
-  "language.saved": "已保存所选语言：{name}（{code}）"
+  "language.saved": "已保存所选语言：{name}（{code}）",
+  "exam.retry": "重新作答",
+  "exam.list": "返回试题列表"
 
 
 

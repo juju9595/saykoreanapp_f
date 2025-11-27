@@ -396,7 +396,9 @@
   "store.free": "Free",
   "theme.change": "Change Theme",
   "store.lack": "Insufficient Points",
-  "store.title": "Store"
+  "store.title": "Store",
+  "exam.retry": "Retry",
+  "exam.list": "Back to Exam List"
 
 
 
