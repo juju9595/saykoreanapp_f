@@ -206,7 +206,7 @@ class _FriendsPageState extends State<FriendsPage>
       await _loadRequests();
       await _loadSentRequests();
     } catch (e) {
-      _showError("거절 실패\n$e");
+      _showError("  거절 실패\n$e");
     }
   }
 
@@ -214,7 +214,7 @@ class _FriendsPageState extends State<FriendsPage>
   Future<void> _delete(Friend friend) async {
     try {
       await _api.deleteFriend(offer: friend.offer, receiver: friend.receiver);
-      _showSnack("friend.delete".tr());
+      _showSnack("friend.deleted".tr());
       _loadFriends();
     } catch (e) {
       _showError('삭제 실패.\n$e');

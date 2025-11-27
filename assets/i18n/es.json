@@ -385,7 +385,10 @@
   "theme.change": "Cambiar tema",
   "store.lack": "Puntos insuficientes",
   "store.title": "Tienda",
-  "language.saved": "Idioma seleccionado: {name} ({code}) guardado"
+  "language.saved": "Idioma seleccionado: {name} ({code}) guardado",
+  "exam.retry": "Reintentar",
+  "exam.list": "Volver a la lista de exámenes"
+
 
 
 
